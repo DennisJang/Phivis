@@ -1,7 +1,10 @@
 import { Link } from "react-router";
 import { ChevronLeft, User, Crown, Bell, Globe, ChevronRight, FileText, Award, Briefcase } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export function Profile() {
+  const navigate = useNavigate();
+  
   const specs = [
     {
       icon: FileText,
@@ -167,7 +170,11 @@ export function Profile() {
         </Link>
 
         {/* Logout */}
-        <button className="w-full bg-white rounded-3xl p-5 text-[#FF3B30] active:bg-[#F5F5F7] transition-colors" style={{ fontWeight: 600 }}>
+        <button 
+          onClick={() => navigate("/")}
+          className="w-full bg-white rounded-3xl p-5 text-[#FF3B30] active:bg-[#F5F5F7] transition-colors" 
+          style={{ fontWeight: 600 }}
+        >
           Log out
         </button>
 
