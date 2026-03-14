@@ -44,7 +44,7 @@ export function Profile() {
         <div className="px-6 py-4">
           <div className="flex items-center gap-4">
             <Link
-              to="/"
+              to="/home"
               className="w-10 h-10 -ml-2 flex items-center justify-center active:scale-95 transition-transform"
             >
               <ChevronLeft size={24} className="text-[#007AFF]" strokeWidth={2.5} />

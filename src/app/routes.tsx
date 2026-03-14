@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { Layout } from "./components/layout";
+import { Landing } from "./pages/landing";
 import { Home } from "./pages/home";
 import { Visa } from "./pages/visa";
 import { Remit } from "./pages/remit";
@@ -11,9 +12,13 @@ import { Paywall } from "./pages/paywall";
 export const router = createBrowserRouter([
   {
     path: "/",
+    Component: Landing,
+  },
+  {
+    path: "/",
     Component: Layout,
     children: [
-      { index: true, Component: Home },
+      { path: "home", Component: Home },
       { path: "visa", Component: Visa },
       { path: "remit", Component: Remit },
       { path: "housing", Component: Housing },

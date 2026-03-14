@@ -5,7 +5,7 @@ export function Layout() {
   const location = useLocation();
 
   const tabs = [
-    { path: "/", icon: Home, label: "Home" },
+    { path: "/home", icon: Home, label: "Home" },
     { path: "/visa", icon: FileText, label: "Visa" },
     { path: "/remit", icon: Send, label: "Remit" },
     { path: "/housing", icon: Building, label: "Housing" },
