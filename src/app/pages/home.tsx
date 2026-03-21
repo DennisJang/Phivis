@@ -160,7 +160,7 @@ export function Home() {
     userProfile?.full_name || user?.user_metadata?.full_name || "there";
   const dDay = calcDDay(userProfile?.visa_expiry ?? null);
   const showUrgent = dDay !== null && dDay <= 30 && dDay > 0;
-  const kiipStage = (visaTracker as Record<string, unknown>)?.kiip_stage as number | undefined;
+  const kiipStage = visaTracker?.kiip_stage ?? undefined;
   const isPremium = userProfile?.subscription_plan === "premium";
 
   // --- 피드: DB 데이터 or 빈 배열 (더미 제거) — 로직 동결 ---

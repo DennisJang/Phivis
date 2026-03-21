@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router'
 import { useRequireAuth } from '../../hooks/useRequireAuth'
 import { useDashboardStore } from '../../stores/useDashboardStore'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { Layout } from './layout'
+import Layout from './layout'
 
 export function AuthGuardLayout() {
   const { isAuthenticated, initialized } = useRequireAuth()
