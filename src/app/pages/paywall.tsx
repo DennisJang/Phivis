@@ -1,8 +1,67 @@
-import { Link } from "react-router";
-import { ChevronLeft, Check, Crown, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { ChevronLeft, Check, Crown, Sparkles, Loader2 } from "lucide-react";
 import { Logo } from "../components/logo";
+import { useAuthStore } from "../../stores/useAuthStore";
+import { loadTossPayments } from "@tosspayments/tosspayments-sdk";
+
+// ============================================
+// Paywall — Toss SDK 빌링키 발급 플로우
+// 규칙 #19: successUrl → /paywall/success
+// 규칙 #20: GoogleAuthButton 없어야 함
+// 규칙 #24: test_ck_ = tosspayments-sdk (혼용 금지)
+// 규칙 #25: customerKey → crypto.randomUUID() (ANONYMOUS 금지)
+// ============================================
+
+const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY
+
+type PlanType = 'premium'
+type BillingCycle = 'monthly' | 'yearly'
 
 export function Paywall() {
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // ============================================
+  // requestBillingAuth — Toss 결제창 열기
+  // 카드 등록 + 본인인증 → /paywall/success로 redirect
+  // ============================================
+  const handleSubscribe = async (plan: PlanType, cycle: BillingCycle) => {
+    if (!user) {
+      navigate('/')
+      return
+    }
+
+    if (!TOSS_CLIENT_KEY) {
+      setError('결제 설정이 완료되지 않았습니다. 관리자에게 문의하세요.')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY)
+      const payment = tossPayments.payment({ customerKey: crypto.randomUUID() })
+
+      // 규칙 #19: successUrl → /paywall/success (Vite 라우트 기준)
+      const origin = window.location.origin
+
+      await payment.requestBillingAuth({
+        method: "CARD",
+        successUrl: `${origin}/paywall/success?plan=${plan}&cycle=${cycle}`,
+        failUrl: `${origin}/paywall?error=payment_failed`,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '결제 요청에 실패했습니다.'
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const basicFeatures = [
     "Visa status tracking",
     "Exchange rate alerts",
@@ -41,6 +100,13 @@ export function Paywall() {
       </header>
 
       <div className="px-6 py-8 space-y-8">
+        {/* Error banner */}
+        {error && (
+          <div className="bg-[#FF3B30]/10 border border-[#FF3B30]/20 rounded-2xl px-4 py-3">
+            <p className="text-sm text-[#FF3B30]">{error}</p>
+          </div>
+        )}
+
         {/* Hero */}
         <div className="text-center space-y-4 py-8">
           <Logo size="large" />
@@ -123,8 +189,20 @@ export function Paywall() {
               ))}
             </div>
 
-            <button className="w-full bg-white text-[#007AFF] rounded-2xl py-4 mb-3 active:scale-98 transition-transform" style={{ fontWeight: 600 }}>
-              Start free 7-day trial
+            <button
+              onClick={() => handleSubscribe('premium', 'monthly')}
+              disabled={loading}
+              className="w-full bg-white text-[#007AFF] rounded-2xl py-4 mb-3 active:scale-98 transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
+              style={{ fontWeight: 600 }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Start free 7-day trial'
+              )}
             </button>
             <p className="text-center text-xs opacity-75">
               Cancel anytime • No commitment
@@ -133,7 +211,11 @@ export function Paywall() {
         </div>
 
         {/* Annual Option */}
-        <div className="bg-white rounded-3xl p-6 border-2 border-[#34C759]">
+        <button
+          onClick={() => handleSubscribe('premium', 'yearly')}
+          disabled={loading}
+          className="w-full text-left bg-white rounded-3xl p-6 border-2 border-[#34C759] active:scale-98 transition-transform disabled:opacity-60"
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
@@ -153,7 +235,7 @@ export function Paywall() {
               <p className="text-sm text-[#86868B]">/month</p>
             </div>
           </div>
-        </div>
+        </button>
 
         {/* FAQ */}
         <div className="bg-white rounded-3xl p-8">

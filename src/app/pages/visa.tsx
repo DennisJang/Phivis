@@ -1,204 +1,214 @@
-import { Link } from "react-router";
-import { ChevronLeft, CheckCircle, Circle, ChevronRight, MessageSquare } from "lucide-react";
+/**
+ * visa.tsx — Phase 0-A (Visa Autopilot Hub — Orchestrator)
+ *
+ * 이 파일은 섹션 컴포넌트를 순서대로 조합하는 역할만 합니다.
+ * 비즈니스 로직은 각 컴포넌트 내부 또는 store에 있습니다.
+ *
+ * 섹션 순서 (SETTLE_ARCHITECTURE_V2.md Layer 4):
+ * 1. Score Ring (기존)
+ * 2. E-7-4 K-point Simulator (🆕)
+ * 3. Requirements Checklist (기존)
+ * 4. KIIP Progress (기존)
+ * 5. Document Submit CTA (기존, "팩스" → "서류 제출" 리브랜딩)
+ * 6. Wage Calculator (🆕)
+ * 7. Lawyer Match CTA (기존)
+ * 8. Liability Sheet (면책 모달)
+ *
+ * Dennis 규칙:
+ * #3  submitFax() 인자 없음
+ * #6  LiabilityActionSheet: isOpen (open 아님)
+ * #26 디자인 작업 시 비즈니스 로직 건드리지 않음
+ * #32 컬러 하드코딩 금지
+ * #34 i18n 전 페이지 적용
+ * #35 급여 계산기 면책 3중 구조 필수
+ */
+
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useAuthStore } from "../../stores/useAuthStore";
+import { useDashboardStore } from "../../stores/useDashboardStore";
+import { useSubmitStore } from "../../stores/useSubmitStore";
+
+// --- Section Components ---
+import { ScoreRing } from "../components/visa/ScoreRing";
+import { KpointSimulator } from "../components/visa/KpointSimulator";
+import { RequirementsChecklist } from "../components/visa/RequirementsChecklist";
+import { KiipProgress } from "../components/visa/KiipProgress";
+import { DocumentSubmitCTA } from "../components/visa/DocumentSubmitCTA";
+import { WageCalculator } from "../components/visa/WageCalculator";
+import { LawyerMatchCTA } from "../components/visa/LawyerMatchCTA";
+import { LiabilitySheet } from "../components/visa/LiabilitySheet";
+
+// 출입국관리사무소 팩스번호 (서울남부 기본값)
+const IMMIGRATION_FAX_NUMBER = "02-2650-6399";
+
+// 기본 체크리스트 (DB 없을 때 fallback)
+const DEFAULT_CHECKLIST = [
+  { id: 1, title: "Valid passport", subtitle: "유효한 여권", completed: false },
+  { id: 2, title: "Proof of employment", subtitle: "재직 증명서", completed: false },
+  { id: 3, title: "Tax payment records", subtitle: "납세 증명서", completed: false },
+  { id: 4, title: "Health insurance", subtitle: "건강보험 가입 증명", completed: false },
+  { id: 5, title: "Residence registration", subtitle: "거소 신고증", completed: false },
+];
 
 export function Visa() {
-  const requirements = [
-    { id: 1, title: "Valid passport", subtitle: "유효한 여권", completed: true },
-    { id: 2, title: "Proof of employment", subtitle: "재직 증명서", completed: true },
-    { id: 3, title: "Tax payment records", subtitle: "납세 증명서", completed: true },
-    { id: 4, title: "Health insurance", subtitle: "건강보험 가입 증명", completed: false },
-    { id: 5, title: "Residence registration", subtitle: "거소 신고증", completed: false },
-  ];
+  const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const { visaTracker, userProfile, loading, hydrate, toggleChecklistItem } =
+    useDashboardStore();
 
-  const kiipLevels = [
-    { level: 0, title: "Pre-KIIP", subtitle: "사전평가", status: "Completed", color: "#34C759" },
-    { level: 1, title: "Basic Korean", subtitle: "초급 한국어", status: "Completed", color: "#34C759" },
-    { level: 2, title: "Intermediate I", subtitle: "중급 한국어 1", status: "In Progress", color: "#007AFF" },
-    { level: 3, title: "Intermediate II", subtitle: "중급 한국어 2", status: "Locked", color: "#86868B" },
-    { level: 4, title: "Advanced", subtitle: "고급 한국어", status: "Locked", color: "#86868B" },
-  ];
+  const {
+    faxStatus,
+    faxError,
+    prepareFax,
+    setLiabilityAccepted,
+    liabilityAccepted,
+    submitFax,
+  } = useSubmitStore();
 
-  const score = 68;
-  const targetScore = 100;
+  const [faxSheetOpen, setFaxSheetOpen] = useState(false);
 
+  // --- Hydrate (최초 1회) — 로직 동결 ---
+  useEffect(() => {
+    if (user?.id && !visaTracker) {
+      hydrate(user.id);
+    }
+  }, [user?.id, visaTracker, hydrate]);
+
+  // --- 동적 데이터 ---
+  const score = visaTracker?.total_score ?? 0;
+  const kiipStage = visaTracker?.kiip_stage ?? 0;
+  const checklist =
+    visaTracker?.checklist && visaTracker.checklist.length > 0
+      ? visaTracker.checklist
+      : DEFAULT_CHECKLIST;
+
+  // 프로필 완성도 (통합신청서 자동완성 준비도)
+  const profileReadiness = userProfile
+    ? [
+        userProfile.foreign_reg_no,
+        userProfile.passport_no,
+        userProfile.address_korea,
+        userProfile.date_of_birth,
+      ].filter(Boolean).length
+    : 0;
+  const isProfileComplete = profileReadiness >= 4;
+
+  // --- 팩스 CTA 핸들러 — 로직 동결 ---
+  const handleFaxCTA = () => {
+    if (!user || !userProfile) return;
+    prepareFax({
+      faxType: "stay_extension",
+      recipientNumber: IMMIGRATION_FAX_NUMBER,
+      payload: {
+        application_type: "stay_extension",
+        visa_type: visaTracker?.visa_type ?? userProfile.visa_type ?? "",
+      },
+    });
+    setFaxSheetOpen(true);
+  };
+
+  const handleFaxConfirm = async () => {
+    await submitFax(); // 인자 없음! (규칙 #3)
+    if (useSubmitStore.getState().faxStatus === "success") {
+      setFaxSheetOpen(false);
+    }
+  };
+
+  // ============================================
+  // Render — 섹션 조합
+  // ============================================
   return (
-    <div className="min-h-screen">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: "var(--color-surface-secondary)" }}
+    >
       {/* Header */}
-      <header className="bg-white border-b border-black/5 sticky top-0 z-10 backdrop-blur-xl">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/home"
-              className="w-10 h-10 -ml-2 flex items-center justify-center active:scale-95 transition-transform"
-            >
-              <ChevronLeft size={24} className="text-[#007AFF]" strokeWidth={2.5} />
-            </Link>
-            <h1 className="text-xl" style={{ fontWeight: 600 }}>
-              Visa
-            </h1>
-          </div>
+      <header
+        className="sticky top-0 z-10"
+        style={{
+          backgroundColor: "var(--color-surface-primary)",
+          borderBottom: "1px solid var(--color-border-default)",
+        }}
+      >
+        <div className="px-4 py-4">
+          <h1
+            className="text-[20px] leading-[25px]"
+            style={{
+              fontWeight: 600,
+              color: "var(--color-text-primary)",
+            }}
+          >
+            {t("visa:title")}
+          </h1>
         </div>
       </header>
 
-      <div className="px-6 py-8 space-y-8">
-        {/* Score Ring */}
-        <div className="bg-white rounded-3xl p-8">
-          <div className="flex flex-col items-center space-y-6">
-            <div className="relative w-48 h-48">
-              <svg className="w-full h-full -rotate-90">
-                {/* Background ring */}
-                <circle
-                  cx="96"
-                  cy="96"
-                  r="88"
-                  fill="none"
-                  stroke="#F5F5F7"
-                  strokeWidth="12"
-                />
-                {/* Progress ring */}
-                <circle
-                  cx="96"
-                  cy="96"
-                  r="88"
-                  fill="none"
-                  stroke="#007AFF"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(score / targetScore) * 553} 553`}
-                  className="transition-all duration-1000"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-5xl" style={{ fontWeight: 600 }}>
-                  {score}
-                </span>
-                <span className="text-sm text-[#86868B]">/ {targetScore}</span>
-              </div>
-            </div>
-            <div className="text-center space-y-1">
-              <h2 className="text-2xl" style={{ fontWeight: 600 }}>
-                Eligibility Score
-              </h2>
-              <p className="text-sm text-[#86868B]">
-                자격 점수 • Ready for E-7 visa
-              </p>
-            </div>
-            <div className="w-full grid grid-cols-3 gap-4 pt-4 border-t border-black/5">
-              <div className="text-center">
-                <p className="text-2xl" style={{ fontWeight: 600 }}>
-                  42
-                </p>
-                <p className="text-xs text-[#86868B] mt-1">Age</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl" style={{ fontWeight: 600 }}>
-                  Level 2
-                </p>
-                <p className="text-xs text-[#86868B] mt-1">KIIP</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl" style={{ fontWeight: 600 }}>
-                  3.2Y
-                </p>
-                <p className="text-xs text-[#86868B] mt-1">Stay</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="px-4 py-6 space-y-6">
+        {/* 1. Score Ring */}
+        <ScoreRing
+          score={score}
+          targetScore={100}
+          loading={loading}
+          visaType={visaTracker?.visa_type ?? null}
+          ageScore={visaTracker?.age_score ?? 0}
+          kiipStage={kiipStage}
+          stayYears={
+            userProfile?.created_at
+              ? Math.max(
+                  0,
+                  (Date.now() - new Date(userProfile.created_at).getTime()) /
+                    (1000 * 60 * 60 * 24 * 365)
+                )
+              : 0
+          }
+        />
 
-        {/* Requirements Checklist */}
-        <div>
-          <h2 className="text-lg mb-4" style={{ fontWeight: 600 }}>
-            Requirements
-          </h2>
-          <div className="bg-white rounded-3xl divide-y divide-black/5">
-            {requirements.map((req) => (
-              <button
-                key={req.id}
-                className="w-full flex items-center gap-4 p-4 text-left active:bg-[#F5F5F7] transition-colors"
-              >
-                {req.completed ? (
-                  <CheckCircle size={24} className="text-[#34C759] flex-shrink-0" strokeWidth={2.5} />
-                ) : (
-                  <Circle size={24} className="text-[#86868B] flex-shrink-0" strokeWidth={2} />
-                )}
-                <div className="flex-1">
-                  <p className="text-sm" style={{ fontWeight: 600 }}>
-                    {req.title}
-                  </p>
-                  <p className="text-xs text-[#86868B] mt-0.5">
-                    {req.subtitle}
-                  </p>
-                </div>
-                <ChevronRight size={20} className="text-[#86868B] flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* 2. E-7-4 K-point Simulator (🆕) */}
+        <KpointSimulator visaTracker={visaTracker} />
 
-        {/* KIIP Progress */}
-        <div>
-          <h2 className="text-lg mb-4" style={{ fontWeight: 600 }}>
-            KIIP Progress
-          </h2>
-          <div className="bg-white rounded-3xl p-6 space-y-4">
-            {kiipLevels.map((level, index) => (
-              <div key={level.level} className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${level.color}15` }}
-                >
-                  <span style={{ color: level.color, fontWeight: 600 }}>
-                    {level.level}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm" style={{ fontWeight: 600 }}>
-                    {level.title}
-                  </p>
-                  <p className="text-xs text-[#86868B] mt-0.5">
-                    {level.subtitle}
-                  </p>
-                </div>
-                <span
-                  className="text-xs px-3 py-1 rounded-full"
-                  style={{
-                    backgroundColor: `${level.color}15`,
-                    color: level.color,
-                    fontWeight: 600,
-                  }}
-                >
-                  {level.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* 3. Requirements Checklist */}
+        <RequirementsChecklist
+          checklist={checklist}
+          onToggle={toggleChecklistItem}
+        />
 
-        {/* Immigration Lawyer CTA */}
-        <button className="w-full bg-gradient-to-br from-[#007AFF] to-[#0051D5] rounded-3xl p-6 text-white shadow-lg active:scale-98 transition-transform">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
-              <MessageSquare size={28} strokeWidth={2} />
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="text-lg" style={{ fontWeight: 600 }}>
-                Connect with Immigration Lawyer
-              </h3>
-              <p className="text-sm opacity-90 mt-1">
-                행정사 매칭 • Get expert help for your visa process
-              </p>
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full" style={{ fontWeight: 600 }}>
-                  Free consultation
-                </span>
-                <span className="text-xs opacity-75">Available in English & Korean</span>
-              </div>
-            </div>
-            <ChevronRight size={24} className="flex-shrink-0" />
-          </div>
-        </button>
+        {/* 4. KIIP Progress */}
+        <KiipProgress currentStage={kiipStage} />
+
+        {/* 5. Document Submit CTA (리브랜딩: 팩스 → 서류 제출) */}
+        <DocumentSubmitCTA
+          isProfileComplete={isProfileComplete}
+          profileReadiness={profileReadiness}
+          faxStatus={faxStatus}
+          onSubmit={handleFaxCTA}
+        />
+
+        {/* 6. Wage Calculator (🆕) */}
+        <WageCalculator />
+
+        {/* 7. Lawyer Match CTA */}
+        <LawyerMatchCTA />
       </div>
+
+      {/* 8. Liability Sheet (면책 모달) */}
+      <LiabilitySheet
+        isOpen={faxSheetOpen}
+        onClose={() => {
+          setFaxSheetOpen(false);
+          setLiabilityAccepted(false);
+        }}
+        onConfirm={handleFaxConfirm}
+        liabilityAccepted={liabilityAccepted}
+        onLiabilityChange={setLiabilityAccepted}
+        faxStatus={faxStatus}
+        faxError={faxError}
+        faxNumber={IMMIGRATION_FAX_NUMBER}
+        applicantName={userProfile?.full_name ?? null}
+        visaType={
+          visaTracker?.visa_type ?? userProfile?.visa_type ?? null
+        }
+      />
     </div>
   );
 }

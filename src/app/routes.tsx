@@ -1,30 +1,70 @@
-import { createBrowserRouter } from "react-router";
-import { Layout } from "./components/layout";
+/**
+ * routes.tsx — Phase 0-A (4-Tab Structure)
+ *
+ * 변경 사항:
+ * - Housing(/housing), Education(/education) 라우트 제거
+ * - 기존 URL 직접 접근 시 /home으로 리다이렉트
+ * - 4탭: Home / Visa / Remit / Profile(MY)
+ *
+ * Dennis 규칙 준수:
+ * #2  window.location.href 금지 → Navigate 컴포넌트 사용
+ * #7  홈탭 라우트: pathname === "/home" 정확 매칭
+ * #19 TossPaywall successUrl → /paywall/success
+ * #31 탭 최대 4~5개
+ */
+
+import { createBrowserRouter, Navigate } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
+// === Page imports ===
 import { Landing } from "./pages/landing";
+import { AuthGuardLayout } from "./components/AuthGuardLayout";
 import { Home } from "./pages/home";
 import { Visa } from "./pages/visa";
 import { Remit } from "./pages/remit";
-import { Housing } from "./pages/housing";
-import { Education } from "./pages/education";
 import { Profile } from "./pages/profile";
 import { Paywall } from "./pages/paywall";
-
+import { PaywallSuccess } from "./pages/PaywallSuccess";
+import { Onboarding } from "./pages/onboarding";
 export const router = createBrowserRouter([
+  // === Public route (Auth) ===
   {
     path: "/",
     Component: Landing,
   },
+
+  // === Protected routes (Auth Guard) ===
   {
     path: "/",
-    Component: Layout,
+    Component: AuthGuardLayout,
     children: [
+      // --- 4 Tab routes ---
       { path: "home", Component: Home },
       { path: "visa", Component: Visa },
       { path: "remit", Component: Remit },
-      { path: "housing", Component: Housing },
-      { path: "education", Component: Education },
-      { path: "profile", Component: Profile },
+      { path: "profile", Component: Profile }, // MY 탭
+
+      // --- Non-tab routes (탭바 미표시) ---
       { path: "paywall", Component: Paywall },
+      { path: "paywall/success", Component: PaywallSuccess },
+      { path: "onboarding", Component: Onboarding },
+
+      // --- 삭제된 탭 리다이렉트 ---
+      // Housing/Education 직접 URL 접근 시 /home으로 이동
+      // 파일(housing.tsx, education.tsx)은 보존 — 데이터 확보 시 부활
+      {
+        path: "housing",
+        element: <Navigate to="/home" replace />,
+      },
+      {
+        path: "education",
+        element: <Navigate to="/home" replace />,
+      },
+
+      // --- Catch-all: 알 수 없는 경로 → /home ---
+      {
+        path: "*",
+        element: <Navigate to="/home" replace />,
+      },
     ],
   },
 ]);
