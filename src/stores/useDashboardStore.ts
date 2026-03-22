@@ -9,14 +9,17 @@ import type {
 } from '../types'
 
 // ============================================
-// Dashboard Store — Phase 2-B
+// Dashboard Store — Phase 2-B v3
 //
 // Phase 2-B 변경사항:
 // - hydrate: .single() → .maybeSingle() (user_profiles, visa_trackers)
-//   원인: Google OAuth 리턴 직후 Auth 토큰이 완전히 세팅되기 전에 hydrate 호출 시
-//         RLS가 auth.uid()를 null로 봄 → 0행 반환 → .single()이 406 에러
-//   수정: .maybeSingle()은 0행이면 data: null 반환 (에러 아님)
-// - hydrate 실패 시 1회 재시도 (500ms 딜레이) — Auth 토큰 안정화 대기
+//   406 에러 방지: .maybeSingle()은 0행이면 {data: null, error: null} 반환
+//
+// - 재시도 로직 v3:
+//   .maybeSingle()은 RLS 0행 시 error=null, data=null을 반환하므로
+//   "profileRes.error" 체크로는 재시도가 트리거 안 됨.
+//   → 조건 변경: data가 null이면 무조건 1회 재시도 (500ms 딜레이)
+//   → 재시도에서도 null이면 진짜 신규 유저로 판단
 //
 // 비즈니스 로직 동결: saveWorkLog, updateSpecOptimistic, toggleChecklistItem,
 //                     updateProfileField, reset 100% 원본 유지
@@ -59,9 +62,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
   // ============================================
   // hydrate — 로그인 직후 1회 호출
-  // 4개 테이블 병렬 fetch (RLS가 user_id 필터링)
-  //
-  // ★ Phase 2-B: .single() → .maybeSingle() + 재시도
+  // ★ Phase 2-B v3: .maybeSingle() + null일 때 재시도
   // ============================================
   hydrate: async (userId: string) => {
     set({ loading: true, error: null })
@@ -75,13 +76,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
           .from('user_profiles')
           .select('*')
           .eq('user_id', userId)
-          .maybeSingle(),  // ★ .single() → .maybeSingle()
+          .maybeSingle(),
 
         supabase
           .from('visa_trackers')
           .select('*')
           .eq('user_id', userId)
-          .maybeSingle(),  // ★ .single() → .maybeSingle()
+          .maybeSingle(),
 
         supabase
           .from('daily_work_logs')
@@ -98,6 +99,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
           .limit(10),
       ])
 
+      // 에러 로깅 (디버깅용)
       const errors = [profileRes.error, visaRes.error, logsRes.error, eventsRes.error]
         .filter(Boolean)
         .map((e) => e?.message ?? 'Unknown error')
@@ -106,23 +108,31 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         console.error('[Dashboard hydrate] errors:', errors)
       }
 
-      // ★ Phase 2-B: 프로필이 null이고 에러도 있으면 → Auth 토큰 레이스 가능성
-      // 500ms 후 1회 재시도
-      if (!profileRes.data && profileRes.error) {
-        console.warn('[Dashboard hydrate] Profile fetch failed, retrying in 500ms...')
+      // ★ v3 핵심: 프로필이 null이면 Auth 토큰 레이스 가능성 → 1회 재시도
+      // .maybeSingle()은 RLS 0행 시 error=null, data=null을 반환하므로
+      // error 체크가 아닌 data null 체크로 재시도 판단
+      if (!profileRes.data) {
+        console.warn('[Dashboard hydrate] Profile is null, retrying in 500ms (auth token race)...')
         await new Promise(resolve => setTimeout(resolve, 500))
 
-        const retryProfile = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle()
+        const [retryProfile, retryVisa] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle(),
+          supabase
+            .from('visa_trackers')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle(),
+        ])
 
-        const retryVisa = await supabase
-          .from('visa_trackers')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle()
+        if (retryProfile.data) {
+          console.log('[Dashboard hydrate] Retry succeeded — profile loaded')
+        } else {
+          console.warn('[Dashboard hydrate] Retry also returned null — likely new user')
+        }
 
         set({
           userProfile: retryProfile.data ?? null,
