@@ -213,8 +213,20 @@ export function Visa() {
         </div>
 
         {/* ── Block C: Tools ── */}
-        {/* 7. Wage Calculator */}
-        <WageCalculator />
+        <div className="mt-2">
+          <h2
+            className="text-[22px] leading-[28px] mb-3"
+            style={{
+              fontWeight: 600,
+              color: "var(--color-text-primary)",
+            }}
+          >
+            {t("visa:tools_title")}
+          </h2>
+
+          {/* 7. Wage Calculator */}
+          <WageCalculator />
+        </div>
       </div>
 
       {/* 8. Liability Sheet (면책 모달) */}

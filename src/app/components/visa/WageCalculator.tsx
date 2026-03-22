@@ -1,29 +1,38 @@
 /**
- * WageCalculator.tsx — 🆕 급여 계산기
+ * WageCalculator.tsx — Phase 1 (급여 계산기)
  *
- * SETTLE_ARCHITECTURE_V2.md Layer 3:
- * - 순수 클라이언트 사이드 계산 (DB 불사용, Edge Function 불호출)
- * - Store 불사용 (visa.tsx 내부 state만)
+ * Phase 0-A → Phase 1 변경사항:
+ * - 서브텍스트 "Estimate your monthly pay" 추가
+ * - 인풋: 3개 독립 행 (시급/시간/일수) + 우측 라벨 인라인
+ * - Night shift: 숫자 인풋 → on/off 토글 스위치 (on = 2시간 기본)
+ * - OT 인풋 제거 (와이어프레임에 없음, 계산은 0으로 유지)
+ * - 히어로 금액 표시: ₩2,460,000 /month (34pt)
+ * - Breakdown: 카드 바깥 심플 행
+ * - 전문가 CTA: 가로 2개 pill 버튼
+ *
+ * 비즈니스 로직 100% 동결 (#26):
+ * - calculateWage 함수 변경 없음
+ * - MINIMUM_WAGE_2026 = 10,320
+ * - 3중 면책 구조 유지 (#35)
  *
  * BUSINESS_MODEL.md 설계 제약 5원칙:
- * 1. "Wage Calculator"로 명명 ("Verifier"/"Checker" 금지)
- * 2. 앱이 판단하지 않음 — 두 숫자 나란히 표시, 유저가 비교
- * 3. 수집 최소화 — 시급/근무시간/야간 3개만
+ * 1. "Wage Calculator"로 명명
+ * 2. 앱이 판단하지 않음 — 두 숫자 나란히 표시
+ * 3. 수집 최소화
  * 4. Free 티어에 포함
- * 5. 면책은 유저 언어로 (다국어 필수)
- *
- * 면책 3중 구조 (Dennis 규칙 #35):
- * Layer 1: 결과 상단 "예상 급여 (모의계산)"
- * Layer 2: 결과 하단 법적 효력 없음 고지
- * Layer 3: 전문가 연결 CTA (1350 + 공인노무사)
+ * 5. 면책은 유저 언어로
  */
 
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Calculator, Phone, User } from "lucide-react";
+import { Calculator, Phone, Scale } from "lucide-react";
 
-const MINIMUM_WAGE_2026 = 10_320; // 원/시간 — 하드코딩 OK (연 1회 업데이트)
+const MINIMUM_WAGE_2026 = 10_320;
+const DEFAULT_NIGHT_HOURS = 2; // 토글 on 시 기본 야간시간
 
+// ──────────────────────────────────────
+// calculateWage — 로직 동결 (Phase 0-A 원본)
+// ──────────────────────────────────────
 interface WageBreakdown {
   basePay: number;
   nightPay: number;
@@ -40,39 +49,28 @@ function calculateWage(
   nightHours: number,
   overtimeHoursWeek: number
 ): WageBreakdown {
-  // 기본급: 시급 × 일 근무시간 × 주 근무일 × 4.345주
   const weeksPerMonth = 4.345;
   const basePay = Math.round(
     hourlyRate * hoursPerDay * daysPerWeek * weeksPerMonth
   );
-
-  // 야간수당: 시급 × 0.5 × 야간시간 × 주 근무일 × 4.345주
   const nightPay = Math.round(
     hourlyRate * 0.5 * nightHours * daysPerWeek * weeksPerMonth
   );
-
-  // 초과근무수당: 시급 × 1.5 × 주 초과시간 × 4.345주
   const overtimePay = Math.round(
     hourlyRate * 1.5 * overtimeHoursWeek * weeksPerMonth
   );
-
-  // 주휴수당: 주 15시간 이상 시, 시급 × 일 근무시간 × 4.345주
   const weeklyHours = hoursPerDay * daysPerWeek;
   const weeklyHolidayPay =
     weeklyHours >= 15
       ? Math.round(hourlyRate * hoursPerDay * weeksPerMonth)
       : 0;
-
   const totalPay = basePay + nightPay + overtimePay + weeklyHolidayPay;
-
-  // 최저임금 기준 월급 (동일 근무시간 가정)
   const minimumMonthlyPay = Math.round(
     MINIMUM_WAGE_2026 * hoursPerDay * daysPerWeek * weeksPerMonth +
       (weeklyHours >= 15
         ? MINIMUM_WAGE_2026 * hoursPerDay * weeksPerMonth
         : 0)
   );
-
   return {
     basePay,
     nightPay,
@@ -83,16 +81,21 @@ function calculateWage(
   };
 }
 
+// ──────────────────────────────────────
+// Component
+// ──────────────────────────────────────
 export function WageCalculator() {
   const { t } = useTranslation();
 
-  // 입력 상태 (수집 최소화 원칙: 3+2개만)
-  const [hourlyRate, setHourlyRate] = useState<string>("");
+  const [hourlyRate, setHourlyRate] = useState<string>(
+    String(MINIMUM_WAGE_2026)
+  );
   const [hoursPerDay, setHoursPerDay] = useState<string>("8");
   const [daysPerWeek, setDaysPerWeek] = useState<string>("5");
-  const [nightHours, setNightHours] = useState<string>("0");
-  const [overtimeHours, setOvertimeHours] = useState<string>("0");
+  const [nightShiftOn, setNightShiftOn] = useState(false);
   const [showResult, setShowResult] = useState(false);
+
+  const nightHours = nightShiftOn ? DEFAULT_NIGHT_HOURS : 0;
 
   const result = useMemo(() => {
     const rate = Number(hourlyRate) || 0;
@@ -101,10 +104,10 @@ export function WageCalculator() {
       rate,
       Number(hoursPerDay) || 8,
       Number(daysPerWeek) || 5,
-      Number(nightHours) || 0,
-      Number(overtimeHours) || 0
+      nightHours,
+      0 // OT hours — 와이어프레임에서 인풋 제거, 0 고정
     );
-  }, [hourlyRate, hoursPerDay, daysPerWeek, nightHours, overtimeHours]);
+  }, [hourlyRate, hoursPerDay, daysPerWeek, nightHours]);
 
   const handleCalculate = () => {
     if (Number(hourlyRate) > 0) setShowResult(true);
@@ -116,194 +119,160 @@ export function WageCalculator() {
       style={{ backgroundColor: "var(--color-surface-primary)" }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <Calculator
-          size={18}
-          style={{ color: "var(--color-action-primary)" }}
-        />
-        <h2
-          className="text-[17px] leading-[22px]"
-          style={{
-            fontWeight: 600,
-            color: "var(--color-text-primary)",
-          }}
+      <div className="mb-1">
+        <div className="flex items-center gap-2">
+          <Calculator
+            size={18}
+            strokeWidth={1.5}
+            style={{ color: "var(--color-action-primary)" }}
+          />
+          <h3
+            className="text-[17px] leading-[22px]"
+            style={{
+              fontWeight: 600,
+              color: "var(--color-text-primary)",
+            }}
+          >
+            {t("visa:wage_title")}
+          </h3>
+        </div>
+        <p
+          className="mt-1 text-[13px] leading-[18px]"
+          style={{ color: "var(--color-text-secondary)" }}
         >
-          {t("visa:wage_title")}
-        </h2>
+          {t("visa:wage_subtitle")}
+        </p>
       </div>
 
-      {/* Input Fields */}
-      <div className="space-y-3">
+      {/* Input Fields — 3개 독립 행 */}
+      <div className="mt-4 space-y-3">
         {/* 시급 */}
-        <div>
-          <label
-            className="mb-1 block text-[13px] leading-[18px]"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("visa:wage_hourly_rate")}
-          </label>
-          <div className="relative">
-            <span
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[15px]"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              ₩
-            </span>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={hourlyRate}
-              onChange={(e) => {
-                setHourlyRate(e.target.value);
-                setShowResult(false);
-              }}
-              placeholder={String(MINIMUM_WAGE_2026)}
-              className="w-full rounded-2xl py-3 pl-8 pr-4 text-[15px] outline-none transition-all focus:ring-2"
-              style={{
-                backgroundColor: "var(--color-surface-secondary)",
-                color: "var(--color-text-primary)",
-                minHeight: 48,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 2-column: 일 근무시간 / 주 근무일 */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label
-              className="mb-1 block text-[13px] leading-[18px]"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {t("visa:wage_hours_day")}
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={hoursPerDay}
-              onChange={(e) => {
-                setHoursPerDay(e.target.value);
-                setShowResult(false);
-              }}
-              className="w-full rounded-2xl py-3 px-4 text-[15px] outline-none transition-all focus:ring-2"
-              style={{
-                backgroundColor: "var(--color-surface-secondary)",
-                color: "var(--color-text-primary)",
-                minHeight: 48,
-              }}
-            />
-          </div>
-          <div>
-            <label
-              className="mb-1 block text-[13px] leading-[18px]"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {t("visa:wage_days_week")}
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={daysPerWeek}
-              onChange={(e) => {
-                setDaysPerWeek(e.target.value);
-                setShowResult(false);
-              }}
-              className="w-full rounded-2xl py-3 px-4 text-[15px] outline-none transition-all focus:ring-2"
-              style={{
-                backgroundColor: "var(--color-surface-secondary)",
-                color: "var(--color-text-primary)",
-                minHeight: 48,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 2-column: 야간시간 / 초과근무 */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label
-              className="mb-1 block text-[13px] leading-[18px]"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {t("visa:wage_night_hours")}
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={nightHours}
-              onChange={(e) => {
-                setNightHours(e.target.value);
-                setShowResult(false);
-              }}
-              className="w-full rounded-2xl py-3 px-4 text-[15px] outline-none transition-all focus:ring-2"
-              style={{
-                backgroundColor: "var(--color-surface-secondary)",
-                color: "var(--color-text-primary)",
-                minHeight: 48,
-              }}
-            />
-          </div>
-          <div>
-            <label
-              className="mb-1 block text-[13px] leading-[18px]"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {t("visa:wage_overtime")}
-            </label>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={overtimeHours}
-              onChange={(e) => {
-                setOvertimeHours(e.target.value);
-                setShowResult(false);
-              }}
-              className="w-full rounded-2xl py-3 px-4 text-[15px] outline-none transition-all focus:ring-2"
-              style={{
-                backgroundColor: "var(--color-surface-secondary)",
-                color: "var(--color-text-primary)",
-                minHeight: 48,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Calculate Button */}
-        <button
-          onClick={handleCalculate}
-          disabled={!hourlyRate || Number(hourlyRate) <= 0}
-          className="w-full rounded-2xl py-3.5 text-[15px] active:scale-[0.98] transition-transform disabled:opacity-50"
-          style={{
-            fontWeight: 600,
-            backgroundColor: "var(--color-action-primary)",
-            color: "var(--color-text-on-color)",
-            minHeight: 44,
+        <InputRow
+          value={hourlyRate}
+          onChange={(v) => {
+            setHourlyRate(v);
+            setShowResult(false);
           }}
+          prefix="₩"
+          label={t("visa:wage_hourly_label")}
+          placeholder={String(MINIMUM_WAGE_2026)}
+        />
+
+        {/* 일 근무시간 */}
+        <InputRow
+          value={hoursPerDay}
+          onChange={(v) => {
+            setHoursPerDay(v);
+            setShowResult(false);
+          }}
+          label={t("visa:wage_hours_label")}
+        />
+
+        {/* 주 근무일 */}
+        <InputRow
+          value={daysPerWeek}
+          onChange={(v) => {
+            setDaysPerWeek(v);
+            setShowResult(false);
+          }}
+          label={t("visa:wage_days_label")}
+        />
+      </div>
+
+      {/* Night shift toggle */}
+      <div className="mt-4 flex items-center justify-between">
+        <span
+          className="text-[15px] leading-[20px]"
+          style={{ color: "var(--color-text-primary)" }}
         >
-          {t("visa:wage_calculate")}
+          {t("visa:wage_night_toggle")}
+        </span>
+        <button
+          onClick={() => {
+            setNightShiftOn(!nightShiftOn);
+            setShowResult(false);
+          }}
+          className="relative h-[31px] w-[51px] rounded-full transition-colors duration-200"
+          style={{
+            backgroundColor: nightShiftOn
+              ? "var(--color-action-success)"
+              : "var(--color-text-tertiary)",
+          }}
+          role="switch"
+          aria-checked={nightShiftOn}
+          aria-label={t("visa:wage_night_toggle")}
+        >
+          <div
+            className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-sm transition-transform duration-200"
+            style={{
+              transform: nightShiftOn
+                ? "translateX(22px)"
+                : "translateX(2px)",
+            }}
+          />
         </button>
       </div>
 
-      {/* ===== Result Area ===== */}
-      {showResult && result && (
-        <div className="mt-5 space-y-4">
-          {/* Layer 1: 결과 상단 라벨 */}
-          <p
-            className="text-[13px] leading-[18px]"
-            style={{
-              fontWeight: 600,
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            {t("visa:wage_result_label")}
-          </p>
+      {/* Calculate button */}
+      <button
+        onClick={handleCalculate}
+        disabled={!hourlyRate || Number(hourlyRate) <= 0}
+        className="mt-5 w-full rounded-2xl py-3.5 text-[17px] active:scale-[0.98] transition-transform disabled:opacity-50"
+        style={{
+          fontWeight: 600,
+          backgroundColor: "var(--color-action-primary)",
+          color: "var(--color-text-on-color)",
+          minHeight: 48,
+        }}
+      >
+        {t("visa:wage_calculate")}
+      </button>
 
-          {/* 예상 급여 vs 최저임금 — 나란히 비교, 판단 안 함 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div
-              className="rounded-2xl p-4"
+      {/* ===== Result ===== */}
+      {showResult && result && (
+        <div className="mt-6">
+          {/* Layer 1: 결과 상단 라벨 */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[16px]">📊</span>
+            <span
+              className="text-[13px] leading-[18px]"
               style={{
-                backgroundColor: "var(--color-surface-secondary)",
+                fontWeight: 600,
+                color: "var(--color-action-primary)",
+              }}
+            >
+              {t("visa:wage_result_label")}
+            </span>
+          </div>
+
+          {/* Hero amount */}
+          <div className="flex items-baseline gap-1 mb-4">
+            <span
+              className="text-[34px] leading-[41px]"
+              style={{
+                fontWeight: 600,
+                color: "var(--color-text-primary)",
+              }}
+            >
+              ₩{result.totalPay.toLocaleString()}
+            </span>
+            <span
+              className="text-[15px] leading-[20px]"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              /{t("visa:wage_per_month")}
+            </span>
+          </div>
+
+          {/* Your estimate vs Minimum wage — 나란히 비교 카드 */}
+          <div
+            className="grid grid-cols-2 rounded-2xl overflow-hidden"
+            style={{ backgroundColor: "var(--color-surface-secondary)" }}
+          >
+            <div
+              className="p-4"
+              style={{
+                borderRight: "1px solid var(--color-border-default)",
               }}
             >
               <p
@@ -313,7 +282,7 @@ export function WageCalculator() {
                 {t("visa:wage_your_estimate")}
               </p>
               <p
-                className="text-[20px] leading-[25px]"
+                className="text-[17px] leading-[22px]"
                 style={{
                   fontWeight: 600,
                   color: "var(--color-text-primary)",
@@ -322,12 +291,7 @@ export function WageCalculator() {
                 ₩{result.totalPay.toLocaleString()}
               </p>
             </div>
-            <div
-              className="rounded-2xl p-4"
-              style={{
-                backgroundColor: "var(--color-surface-secondary)",
-              }}
-            >
+            <div className="p-4">
               <p
                 className="text-[12px] leading-[16px] mb-1"
                 style={{ color: "var(--color-text-secondary)" }}
@@ -335,7 +299,7 @@ export function WageCalculator() {
                 {t("visa:wage_minimum_ref")}
               </p>
               <p
-                className="text-[20px] leading-[25px]"
+                className="text-[17px] leading-[22px]"
                 style={{
                   fontWeight: 600,
                   color: "var(--color-text-primary)",
@@ -346,16 +310,16 @@ export function WageCalculator() {
             </div>
           </div>
 
-          {/* Breakdown */}
-          <div
-            className="space-y-2 rounded-2xl p-4"
-            style={{ backgroundColor: "var(--color-surface-secondary)" }}
-          >
+          {/* Breakdown — 심플 행 */}
+          <div className="mt-4 space-y-2.5">
             {[
               { label: t("visa:wage_base"), value: result.basePay },
               { label: t("visa:wage_night"), value: result.nightPay },
               { label: t("visa:wage_ot"), value: result.overtimePay },
-              { label: t("visa:wage_holiday"), value: result.weeklyHolidayPay },
+              {
+                label: t("visa:wage_holiday"),
+                value: result.weeklyHolidayPay,
+              },
             ].map((row) => (
               <div
                 key={row.label}
@@ -370,7 +334,7 @@ export function WageCalculator() {
                 <span
                   className="text-[13px] leading-[18px]"
                   style={{
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: "var(--color-text-primary)",
                   }}
                 >
@@ -381,78 +345,138 @@ export function WageCalculator() {
           </div>
 
           {/* Layer 2: 법적 효력 없음 면책 */}
-          <p
-            className="text-[11px] leading-[15px]"
-            style={{ color: "var(--color-text-tertiary)" }}
-          >
-            {t("visa:wage_disclaimer")}
-          </p>
-
-          {/* Layer 3: 전문가 연결 CTA */}
           <div
-            className="space-y-2 rounded-2xl p-4"
+            className="mt-5 pt-4"
             style={{
-              backgroundColor: "var(--color-surface-secondary)",
+              borderTop: "1px solid var(--color-border-default)",
             }}
           >
             <p
-              className="text-[13px] leading-[18px] mb-2"
+              className="text-[12px] leading-[16px]"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
+              {t("visa:wage_disclaimer")}
+            </p>
+          </div>
+
+          {/* Layer 3: 전문가 연결 CTA */}
+          <div className="mt-4">
+            <p
+              className="text-[15px] leading-[20px] mb-3"
               style={{
                 fontWeight: 600,
-                color: "var(--color-text-secondary)",
+                color: "var(--color-text-primary)",
               }}
             >
               {t("visa:wage_expert_title")}
             </p>
-            <a
-              href="tel:1350"
-              className="flex items-center gap-3 rounded-2xl p-3 active:scale-[0.98] transition-transform"
-              style={{
-                backgroundColor: "var(--color-surface-primary)",
-                minHeight: 44,
-              }}
-            >
-              <Phone
-                size={18}
-                style={{ color: "var(--color-action-primary)" }}
-              />
-              <span
-                className="text-[15px] leading-[20px]"
+            <div className="flex gap-3">
+              <a
+                href="tel:1350"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.98] transition-transform"
                 style={{
-                  fontWeight: 600,
-                  color: "var(--color-action-primary)",
+                  backgroundColor: "var(--color-surface-secondary)",
+                  minHeight: 44,
                 }}
               >
-                {t("visa:wage_call_1350")}
-              </span>
-            </a>
-            <a
-              href="https://www.kicpa.or.kr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-2xl p-3 active:scale-[0.98] transition-transform"
-              style={{
-                backgroundColor: "var(--color-surface-primary)",
-                minHeight: 44,
-              }}
-            >
-              <User
-                size={18}
-                style={{ color: "var(--color-action-primary)" }}
-              />
-              <span
-                className="text-[15px] leading-[20px]"
+                <Phone
+                  size={16}
+                  strokeWidth={1.5}
+                  style={{ color: "var(--color-text-primary)" }}
+                />
+                <span
+                  className="text-[13px] leading-[18px]"
+                  style={{
+                    fontWeight: 600,
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  {t("visa:wage_call_1350")}
+                </span>
+              </a>
+              <a
+                href="https://www.kicpa.or.kr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 active:scale-[0.98] transition-transform"
                 style={{
-                  fontWeight: 600,
-                  color: "var(--color-action-primary)",
+                  backgroundColor: "var(--color-surface-secondary)",
+                  minHeight: 44,
                 }}
               >
-                {t("visa:wage_find_labor")}
-              </span>
-            </a>
+                <Scale
+                  size={16}
+                  strokeWidth={1.5}
+                  style={{ color: "var(--color-text-primary)" }}
+                />
+                <span
+                  className="text-[13px] leading-[18px]"
+                  style={{
+                    fontWeight: 600,
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  {t("visa:wage_find_labor")}
+                </span>
+              </a>
+            </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────
+// InputRow — 와이어프레임 스타일 인풋 (값 좌측, 라벨 우측)
+// ──────────────────────────────────────
+function InputRow({
+  value,
+  onChange,
+  label,
+  prefix,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  prefix?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div
+      className="flex items-center rounded-2xl px-4"
+      style={{
+        backgroundColor: "var(--color-surface-secondary)",
+        minHeight: 48,
+      }}
+    >
+      {prefix && (
+        <span
+          className="mr-1 text-[15px]"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          {prefix}
+        </span>
+      )}
+      <input
+        type="number"
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 bg-transparent py-3 text-[15px] outline-none"
+        style={{
+          color: "var(--color-text-primary)",
+          fontWeight: 500,
+        }}
+      />
+      <span
+        className="ml-2 text-[13px] leading-[18px] whitespace-nowrap"
+        style={{ color: "var(--color-text-secondary)" }}
+      >
+        {label}
+      </span>
     </div>
   );
 }

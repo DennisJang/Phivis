@@ -1,18 +1,23 @@
 /**
- * home.tsx — Phase 0-A (Glanceable Dashboard Redesign)
+ * home.tsx — Phase 1 (Glanceable Dashboard)
  *
- * 변경 사항:
- * - Quick Actions 4그리드 → 글랜서블 카드 구조 (D-Day + 환율 + KIIP + 송금 + 피드 + 프리미엄)
- * - Housing/Education 링크 제거 (4탭 구조 반영)
- * - 하드코딩 색상 → 시맨틱 토큰 (Dennis 규칙 #32)
- * - 하드코딩 텍스트 → t() i18n (Dennis 규칙 #34)
- * - 빈 상태에 CTA 버튼 추가 (DESIGN_SYSTEM.md 섹션 8)
- * - 환율/송금 데이터: home 내부 독립 fetch (store 미변경, Dennis 규칙 #26)
+ * Phase 0-A → Phase 1 변경사항:
+ * - D-Day 카드: 비자타입 배지 + 만료일 날짜 표시
+ * - 환율/KIIP: 2-column → 각각 독립 컴팩트 카드
+ * - 카드 간격: space-y-6 → space-y-4 (16pt)
+ * - pb-32 추가 (부유형 탭바 겹침 방지)
+ * - Premium 배너: "Start trial" 버튼 텍스트
  *
  * 동결된 로직 (절대 수정 금지):
  * - calcDDay(), mapEventIcon(), formatTimeAgo()
  * - useAuthStore, useDashboardStore hydrate 호출
+ * - 환율/송금 fetch 로직
  * - 피드 매핑 로직
+ *
+ * Dennis 규칙:
+ * #26 비즈니스 로직 건드리지 않음
+ * #32 컬러 하드코딩 금지
+ * #34 i18n 전 페이지 적용
  */
 
 import { useEffect, useState, useCallback } from "react";
@@ -25,7 +30,7 @@ import {
   CheckCircle,
   GraduationCap,
   TrendingUp,
-  Loader2,
+  Bell,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Logo } from "../components/logo";
@@ -34,7 +39,7 @@ import { useDashboardStore } from "../../stores/useDashboardStore";
 import { supabase } from "../../lib/supabase";
 
 // ============================================
-// D-Day 계산 유틸 (결정론적, AI 추론 금지) — 로직 동결
+// 유틸 함수 — 로직 100% 동결
 // ============================================
 function calcDDay(visaExpiry: string | null): number | null {
   if (!visaExpiry) return null;
@@ -42,9 +47,6 @@ function calcDDay(visaExpiry: string | null): number | null {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-// ============================================
-// lifeEvent → 피드 아이템 매핑 — 로직 동결
-// ============================================
 function mapEventIcon(eventType: string) {
   switch (eventType) {
     case "visa_approved":
@@ -71,7 +73,7 @@ function formatTimeAgo(dateStr: string): string {
 }
 
 // ============================================
-// 환율 타입
+// 타입
 // ============================================
 interface ExchangeRateData {
   currency_code: string;
@@ -86,21 +88,21 @@ export function Home() {
   const { userProfile, visaTracker, lifeEvents, loading, hydrate } =
     useDashboardStore();
 
-  // --- 환율/송금: 로컬 state (store 미변경, Dennis 규칙 #26) ---
+  // --- 환율/송금: 로컬 state (store 미변경) ---
   const [exchangeRate, setExchangeRate] = useState<ExchangeRateData | null>(
     null
   );
   const [monthlyRemit, setMonthlyRemit] = useState<number | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
 
-  // hydrate 호출 (최초 1회) — 로직 동결
+  // --- hydrate (최초 1회) — 동결 ---
   useEffect(() => {
     if (user?.id && !userProfile) {
       hydrate(user.id);
     }
   }, [user?.id, userProfile, hydrate]);
 
-  // --- 환율 fetch (home 독립, store 불변) ---
+  // --- 환율 fetch — 동결 ---
   const fetchExchangeRate = useCallback(async () => {
     try {
       const country = userProfile?.frequent_country ?? "USD";
@@ -111,29 +113,27 @@ export function Home() {
         .order("fetched_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-
       if (data) setExchangeRate(data);
     } catch {
-      // 환율 실패는 치명적이지 않음 — 빈 상태로 표시
+      // 빈 상태로 표시
     }
   }, [userProfile?.frequent_country]);
 
-  // --- 이번 달 송금 합계 fetch ---
+  // --- 송금 합계 fetch — 동결 ---
   const fetchMonthlyRemit = useCallback(async () => {
     if (!user?.id) return;
     try {
       const now = new Date();
       const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-
       const { data } = await supabase
         .from("remit_logs")
         .select("amount_krw")
         .eq("user_id", user.id)
         .gte("created_at", monthStart);
-
       if (data && data.length > 0) {
         const total = data.reduce(
-          (sum: number, row: { amount_krw: number }) => sum + (row.amount_krw || 0),
+          (sum: number, row: { amount_krw: number }) =>
+            sum + (row.amount_krw || 0),
           0
         );
         setMonthlyRemit(total);
@@ -141,11 +141,11 @@ export function Home() {
         setMonthlyRemit(0);
       }
     } catch {
-      // 송금 실패는 치명적이지 않음
+      // 빈 상태로 표시
     }
   }, [user?.id]);
 
-  // --- 환율/송금 fetch 트리거 ---
+  // --- fetch 트리거 — 동결 ---
   useEffect(() => {
     if (userProfile) {
       setLocalLoading(true);
@@ -162,8 +162,11 @@ export function Home() {
   const showUrgent = dDay !== null && dDay <= 30 && dDay > 0;
   const kiipStage = visaTracker?.kiip_stage ?? undefined;
   const isPremium = userProfile?.subscription_plan === "premium";
+  const visaType =
+    visaTracker?.visa_type ?? userProfile?.visa_type ?? null;
+  const visaExpiry = userProfile?.visa_expiry ?? null;
 
-  // --- 피드: DB 데이터 or 빈 배열 (더미 제거) — 로직 동결 ---
+  // --- 피드 매핑 — 동결 ---
   const feedItems = lifeEvents.map((event) => {
     const { icon, color } = mapEventIcon(event.event_type);
     const payload = event.payload as Record<string, string>;
@@ -177,7 +180,7 @@ export function Home() {
     };
   });
 
-  // --- D-Day 카드 색상 결정 ---
+  // --- D-Day 색상 ---
   const dDayColor =
     dDay === null
       ? "var(--color-text-secondary)"
@@ -192,35 +195,33 @@ export function Home() {
   // ============================================
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen pb-32"
       style={{ backgroundColor: "var(--color-surface-secondary)" }}
     >
-      {/* ===== Header ===== */}
+      {/* Header */}
       <header
         style={{
           backgroundColor: "var(--color-surface-primary)",
           borderBottom: "1px solid var(--color-border-default)",
         }}
       >
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Logo size="small" />
-            <Link
-              to="/profile"
-              className="flex h-10 w-10 items-center justify-center rounded-full active:scale-95 transition-transform"
-              style={{ backgroundColor: "var(--color-surface-secondary)" }}
-              aria-label={t("common:tab_my")}
-            >
-              <span className="text-base" role="img" aria-hidden="true">
-                👤
-              </span>
-            </Link>
-          </div>
+        <div className="flex items-center justify-between px-4 py-4">
+          <Logo size="small" />
+          <Link
+            to="/profile"
+            className="flex h-10 w-10 items-center justify-center rounded-full active:scale-95 transition-transform"
+            style={{ backgroundColor: "var(--color-surface-secondary)" }}
+            aria-label={t("common:tab_my")}
+          >
+            <span className="text-base" role="img" aria-hidden="true">
+              👤
+            </span>
+          </Link>
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
-        {/* ===== Welcome ===== */}
+      <div className="px-4 py-6 space-y-4">
+        {/* Welcome */}
         <div className="space-y-1">
           <h1
             className="text-[28px] leading-[34px]"
@@ -239,7 +240,7 @@ export function Home() {
           </p>
         </div>
 
-        {/* ===== Urgent Alert (D-Day ≤ 30) ===== */}
+        {/* Urgent Alert (D-Day ≤ 30) */}
         {showUrgent && (
           <div
             className="rounded-3xl p-5"
@@ -277,35 +278,83 @@ export function Home() {
           </div>
         )}
 
-        {/* ===== Visa D-Day Card ===== */}
-        <div
-          className="rounded-3xl p-5"
+        {/* Visa D-Day Card — 히어로 카드 */}
+        <Link
+          to="/visa"
+          className="block rounded-3xl p-5 active:scale-[0.98] transition-transform"
           style={{
             backgroundColor: "var(--color-surface-primary)",
             boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
           }}
         >
-          <p
-            className="text-[13px] leading-[18px] mb-1"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {t("home:visa_dday_label")}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p
+              className="text-[13px] leading-[18px]"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {t("home:visa_dday_label")}
+            </p>
+            {visaType && (
+              <span
+                className="rounded-lg px-2 py-0.5 text-[11px] leading-[13px]"
+                style={{
+                  fontWeight: 600,
+                  backgroundColor:
+                    "color-mix(in srgb, var(--color-action-primary) 12%, transparent)",
+                  color: "var(--color-action-primary)",
+                }}
+              >
+                {visaType}
+              </span>
+            )}
+          </div>
+
           {dDay !== null ? (
-            <div className="flex items-baseline gap-2">
-              <span
-                className="text-[34px] leading-[41px]"
-                style={{ fontWeight: 600, color: dDayColor }}
+            <>
+              <div className="flex items-baseline gap-2">
+                <span
+                  className="text-[13px] leading-[18px]"
+                  style={{
+                    fontWeight: 600,
+                    color: dDayColor,
+                  }}
+                >
+                  D-
+                </span>
+                <span
+                  className="text-[34px] leading-[41px]"
+                  style={{ fontWeight: 600, color: dDayColor }}
+                >
+                  {dDay}
+                </span>
+              </div>
+              {visaExpiry && (
+                <p
+                  className="mt-1 text-[13px] leading-[18px]"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {new Date(visaExpiry).toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  })}
+                </p>
+              )}
+              <div
+                className="mt-3 h-1.5 overflow-hidden rounded-full"
+                style={{
+                  backgroundColor: "var(--color-surface-secondary)",
+                }}
               >
-                {dDay}
-              </span>
-              <span
-                className="text-[15px] leading-[20px]"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("home:visa_dday_unit")}
-              </span>
-            </div>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.max(0, Math.min(100, ((365 - dDay) / 365) * 100))}%`,
+                    backgroundColor: dDayColor,
+                  }}
+                />
+              </div>
+            </>
           ) : (
             <p
               className="text-[15px] leading-[20px]"
@@ -314,140 +363,131 @@ export function Home() {
               {t("home:visa_dday_empty")}
             </p>
           )}
-          {dDay !== null && (
+        </Link>
+
+        {/* Exchange Rate — 컴팩트 독립 카드 */}
+        <div
+          className="rounded-3xl px-5 py-4"
+          style={{
+            backgroundColor: "var(--color-surface-primary)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp
+                size={16}
+                style={{ color: "var(--color-text-secondary)" }}
+              />
+              <span
+                className="text-[13px] leading-[18px]"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                {t("home:exchange_label")}
+              </span>
+            </div>
+            {localLoading ? (
+              <div
+                className="h-5 w-20 animate-pulse rounded-lg"
+                style={{
+                  backgroundColor: "var(--color-surface-secondary)",
+                }}
+              />
+            ) : exchangeRate ? (
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className="text-[13px] leading-[18px]"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {exchangeRate.currency_code}
+                </span>
+                <span
+                  className="text-[17px] leading-[22px]"
+                  style={{
+                    fontWeight: 600,
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  {exchangeRate.rate.toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              <span
+                className="text-[13px] leading-[18px]"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
+                {t("home:exchange_empty")}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* KIIP Progress — 컴팩트 독립 카드 */}
+        <div
+          className="rounded-3xl px-5 py-4"
+          style={{
+            backgroundColor: "var(--color-surface-primary)",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span
+              className="text-[13px] leading-[18px]"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {t("home:kiip_label")}
+            </span>
+            {kiipStage !== undefined && kiipStage !== null ? (
+              <span
+                className="text-[17px] leading-[22px]"
+                style={{
+                  fontWeight: 600,
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                {kiipStage}
+                <span
+                  className="text-[13px]"
+                  style={{
+                    fontWeight: 400,
+                    color: "var(--color-text-secondary)",
+                  }}
+                >
+                  {" "}
+                  / 5
+                </span>
+              </span>
+            ) : (
+              <span
+                className="text-[13px] leading-[18px]"
+                style={{ color: "var(--color-text-tertiary)" }}
+              >
+                {t("home:kiip_empty")}
+              </span>
+            )}
+          </div>
+          {kiipStage !== undefined && kiipStage !== null && (
             <div
-              className="mt-3 h-1.5 overflow-hidden rounded-full"
-              style={{ backgroundColor: "var(--color-surface-secondary)" }}
+              className="h-1.5 overflow-hidden rounded-full"
+              style={{
+                backgroundColor: "var(--color-surface-secondary)",
+              }}
             >
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${Math.max(0, Math.min(100, ((365 - dDay) / 365) * 100))}%`,
-                  backgroundColor: dDayColor,
+                  width: `${(kiipStage / 5) * 100}%`,
+                  backgroundColor: "var(--color-action-success)",
                 }}
               />
             </div>
           )}
         </div>
 
-        {/* ===== 2-Column: Exchange Rate + KIIP ===== */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Exchange Rate */}
-          <div
-            className="rounded-3xl p-4"
-            style={{
-              backgroundColor: "var(--color-surface-primary)",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-            }}
-          >
-            <div className="flex items-center gap-1.5 mb-2">
-              <TrendingUp
-                size={14}
-                style={{ color: "var(--color-text-secondary)" }}
-              />
-              <p
-                className="text-[12px] leading-[16px]"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                {t("home:exchange_label")}
-              </p>
-            </div>
-            {localLoading ? (
-              <div className="h-7 w-20 animate-pulse rounded-lg"
-                style={{ backgroundColor: "var(--color-surface-secondary)" }}
-              />
-            ) : exchangeRate ? (
-              <>
-                <p
-                  className="text-[20px] leading-[25px]"
-                  style={{
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  ₩{Math.round(exchangeRate.rate).toLocaleString()}
-                </p>
-                <p
-                  className="text-[12px] leading-[16px] mt-0.5"
-                  style={{ color: "var(--color-action-success)" }}
-                >
-                  = 1 {exchangeRate.currency_code}
-                </p>
-              </>
-            ) : (
-              <p
-                className="text-[13px] leading-[18px]"
-                style={{ color: "var(--color-text-tertiary)" }}
-              >
-                {t("home:exchange_empty")}
-              </p>
-            )}
-          </div>
-
-          {/* KIIP Progress */}
-          <div
-            className="rounded-3xl p-4"
-            style={{
-              backgroundColor: "var(--color-surface-primary)",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-            }}
-          >
-            <p
-              className="text-[12px] leading-[16px] mb-2"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {t("home:kiip_label")}
-            </p>
-            {kiipStage !== undefined && kiipStage !== null ? (
-              <>
-                <p
-                  className="text-[20px] leading-[25px]"
-                  style={{
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  {kiipStage}{" "}
-                  <span
-                    className="text-[15px]"
-                    style={{
-                      fontWeight: 400,
-                      color: "var(--color-text-secondary)",
-                    }}
-                  >
-                    / 5
-                  </span>
-                </p>
-                <div
-                  className="mt-2 h-1.5 overflow-hidden rounded-full"
-                  style={{
-                    backgroundColor: "var(--color-surface-secondary)",
-                  }}
-                >
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(kiipStage / 5) * 100}%`,
-                      backgroundColor: "var(--color-action-success)",
-                    }}
-                  />
-                </div>
-              </>
-            ) : (
-              <p
-                className="text-[13px] leading-[18px]"
-                style={{ color: "var(--color-text-tertiary)" }}
-              >
-                {t("home:kiip_empty")}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* ===== Remit Summary ===== */}
+        {/* Remit Summary */}
         <button
           onClick={() => navigate("/remit")}
-          className="w-full rounded-3xl p-5 text-left active:scale-[0.98] transition-transform"
+          className="w-full rounded-3xl px-5 py-4 text-left active:scale-[0.98] transition-transform"
           style={{
             backgroundColor: "var(--color-surface-primary)",
             boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
@@ -462,8 +502,11 @@ export function Home() {
                 {t("home:remit_label")}
               </p>
               {localLoading ? (
-                <div className="h-6 w-28 animate-pulse rounded-lg"
-                  style={{ backgroundColor: "var(--color-surface-secondary)" }}
+                <div
+                  className="h-6 w-28 animate-pulse rounded-lg"
+                  style={{
+                    backgroundColor: "var(--color-surface-secondary)",
+                  }}
                 />
               ) : monthlyRemit !== null && monthlyRemit > 0 ? (
                 <p
@@ -491,7 +534,7 @@ export function Home() {
           </div>
         </button>
 
-        {/* ===== Recent Activity ===== */}
+        {/* Recent Activity */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2
@@ -517,7 +560,6 @@ export function Home() {
           </div>
 
           {loading ? (
-            // 스켈레톤 (DESIGN_SYSTEM.md 섹션 8: 3행 animate-pulse)
             <div
               className="rounded-3xl divide-y"
               style={{
@@ -526,7 +568,10 @@ export function Home() {
               }}
             >
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-start gap-4 p-4 animate-pulse">
+                <div
+                  key={i}
+                  className="flex items-start gap-4 p-4 animate-pulse"
+                >
                   <div
                     className="h-11 w-11 rounded-2xl"
                     style={{
@@ -612,7 +657,6 @@ export function Home() {
               })}
             </div>
           ) : (
-            // 빈 상태 — CTA 필수 (DESIGN_SYSTEM.md 섹션 8)
             <div
               className="rounded-3xl p-8 text-center"
               style={{ backgroundColor: "var(--color-surface-primary)" }}
@@ -639,7 +683,7 @@ export function Home() {
           )}
         </div>
 
-        {/* ===== Premium Upsell Banner ===== */}
+        {/* Premium Upsell Banner */}
         {!isPremium && (
           <Link
             to="/paywall"
@@ -653,16 +697,6 @@ export function Home() {
           >
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <div
-                  className="inline-block rounded-full px-3 py-1 text-[11px] leading-[13px]"
-                  style={{
-                    fontWeight: 600,
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  PREMIUM
-                </div>
                 <h3
                   className="text-[20px] leading-[25px]"
                   style={{ fontWeight: 600 }}
@@ -672,6 +706,16 @@ export function Home() {
                 <p className="text-[13px] leading-[18px] opacity-90">
                   {t("home:premium_desc")}
                 </p>
+                <span
+                  className="inline-block mt-1 rounded-2xl px-4 py-2 text-[13px]"
+                  style={{
+                    fontWeight: 600,
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  {t("home:premium_cta")}
+                </span>
               </div>
               <ChevronRight size={24} className="flex-shrink-0" />
             </div>
