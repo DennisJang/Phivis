@@ -1,21 +1,13 @@
 /**
- * visa.tsx — Phase 1 (Visa Autopilot Hub — Orchestrator)
+ * visa.tsx — Phase 2-B (Visa Autopilot Hub — Premium Gating)
  *
- * Phase 0-A → Phase 1 변경사항:
- * - ScoreRing 직접 호출 제거 (KpointSimulator가 내장)
- * - KpointSimulator에 loading prop 추가
- * - 헤더에 알림 벨 아이콘 추가 (와이어프레임)
- * - 비즈니스 로직 100% 동결 (#26)
+ * Phase 2-B 변경사항:
+ * - isPremium 계산 추가
+ * - DocumentSubmitCTA에 isPremium prop 전달 (게이팅)
+ * - DocumentGuide에 isPremium prop 이미 전달됨 (확인)
  *
- * 섹션 순서 (Phase 1):
- * 1. KpointSimulator (ScoreRing 내장 — Block A)
- * 2. Requirements Checklist
- * 3. KIIP Progress
- * 4. Document Submit CTA
- * 5. Document Guide
- * 6. Wage Calculator
- * 7. Lawyer Match CTA
- * 8. Liability Sheet (면책 모달)
+ * Phase 1 유지:
+ * - 섹션 순서, 컴포넌트 구성, 비즈니스 로직 100% 동결
  *
  * Dennis 규칙:
  * #3  submitFax() 인자 없음
@@ -34,7 +26,6 @@ import { useDashboardStore } from "../../stores/useDashboardStore";
 import { useSubmitStore } from "../../stores/useSubmitStore";
 
 // --- Section Components ---
-// ScoreRing은 KpointSimulator 내부에서 호출됨 (Phase 1 통합)
 import { KpointSimulator } from "../components/visa/KpointSimulator";
 import { RequirementsChecklist } from "../components/visa/RequirementsChecklist";
 import { KiipProgress } from "../components/visa/KiipProgress";
@@ -86,6 +77,9 @@ export function Visa() {
     visaTracker?.checklist && visaTracker.checklist.length > 0
       ? visaTracker.checklist
       : DEFAULT_CHECKLIST;
+
+  // ★ Phase 2-B: Premium 상태
+  const isPremium = userProfile?.subscription_plan === "premium";
 
   // 프로필 완성도 (통합신청서 자동완성 준비도)
   const profileReadiness = userProfile
@@ -188,15 +182,16 @@ export function Visa() {
             {/* 4. AI Document Guide */}
             <DocumentGuide
               visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
-              isPremium={userProfile?.subscription_plan === "premium"}
+              isPremium={isPremium}
             />
 
-            {/* 5. Document Submit CTA */}
+            {/* 5. Document Submit CTA — ★ isPremium 전달 */}
             <DocumentSubmitCTA
               isProfileComplete={isProfileComplete}
               profileReadiness={profileReadiness}
               faxStatus={faxStatus}
               onSubmit={handleFaxCTA}
+              isPremium={isPremium}
             />
 
             {/* 6. Lawyer Match CTA */}

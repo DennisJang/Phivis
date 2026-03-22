@@ -42,7 +42,11 @@
     "activity_empty_cta": "Kiểm tra visa",
     "premium_title": "Mở khóa tất cả tính năng",
     "premium_desc": "Quét hợp đồng AI, gửi tài liệu tự động và hơn thế",
-    "premium_cta": "Dùng thử miễn phí"
+    "premium_cta": "Dùng thử miễn phí",
+    "premium_feature_scanner": "Quét hợp đồng AI",
+    "premium_feature_remit": "So sánh chuyển tiền không giới hạn",
+    "premium_feature_submit": "Nộp hồ sơ tự động",
+    "premium_feature_lawyer": "Ưu tiên kết nối chuyên gia"
   },
   "housing": {
     "title": "Nhà ở · Hợp đồng",

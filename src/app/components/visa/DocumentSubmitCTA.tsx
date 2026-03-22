@@ -1,17 +1,16 @@
 /**
- * DocumentSubmitCTA.tsx — Phase 1 (서류 자동제출 CTA)
+ * DocumentSubmitCTA.tsx — Phase 2-B (Premium Gating)
  *
- * Phase 0-A → Phase 1 변경사항:
- * - Premium 잠금 배지 추가 (와이어프레임: 우상단 "Premium")
- * - ChevronRight 화살표 추가
- * - 내부 submit 버튼 제거 → 카드 전체가 클릭 영역
- * - 레이아웃: 아이콘(좌) + 텍스트(중) + 화살표(우)
+ * Phase 2-B 변경사항:
+ * - isPremium prop 추가
+ * - Free 유저: 잠금 UI — 블러 처리 + "Premium으로 잠금 해제" CTA
+ * - Premium 유저: 기존 동작 100% 유지
  *
  * 비즈니스 로직 동결 (#26):
  * - onSubmit, faxStatus, isProfileComplete 처리 100% 유지
  *
  * Dennis 규칙:
- * #3  submitFax() 인자 없음 (이 컴포넌트에서 호출 안 함, visa.tsx에서 관리)
+ * #3  submitFax() 인자 없음
  * #26 비즈니스 로직 건드리지 않음
  * #32 컬러 하드코딩 금지
  * #34 i18n 전 페이지 적용
@@ -19,6 +18,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Send, Check, Loader2, ChevronRight, Lock } from "lucide-react";
+import { Link } from "react-router";
 import type { SubmitStatus } from "../../../types";
 
 interface DocumentSubmitCTAProps {
@@ -26,6 +26,7 @@ interface DocumentSubmitCTAProps {
   profileReadiness: number;
   faxStatus: SubmitStatus;
   onSubmit: () => void;
+  isPremium?: boolean;
 }
 
 export function DocumentSubmitCTA({
@@ -33,12 +34,70 @@ export function DocumentSubmitCTA({
   profileReadiness,
   faxStatus,
   onSubmit,
+  isPremium = false,
 }: DocumentSubmitCTAProps) {
   const { t } = useTranslation();
 
   const isPending = faxStatus === "pending";
   const isSuccess = faxStatus === "success";
 
+  // ★ Free 유저: 잠금 카드
+  if (!isPremium) {
+    return (
+      <Link
+        to="/paywall"
+        className="block w-full rounded-3xl p-5 text-left active:scale-[0.98] transition-transform relative overflow-hidden"
+        style={{
+          backgroundColor: "var(--color-surface-primary)",
+          border: "1px solid var(--color-border-default)",
+          minHeight: 80,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          {/* Icon — 반투명 */}
+          <div
+            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl"
+            style={{ backgroundColor: "color-mix(in srgb, var(--color-action-success) 10%, transparent)" }}
+          >
+            <Lock size={22} strokeWidth={2} style={{ color: "var(--color-action-success)" }} />
+          </div>
+
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3
+                className="text-[17px] leading-[22px]"
+                style={{ fontWeight: 600, color: "var(--color-text-primary)" }}
+              >
+                {t("visa:doc_submit_title")}
+              </h3>
+              <span
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-[13px]"
+                style={{
+                  fontWeight: 600,
+                  backgroundColor: "color-mix(in srgb, var(--color-action-primary) 12%, transparent)",
+                  color: "var(--color-action-primary)",
+                }}
+              >
+                <Lock size={9} strokeWidth={2.5} />
+                Premium
+              </span>
+            </div>
+            <p
+              className="mt-1 text-[13px] leading-[18px]"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              {t("visa:doc_submit_desc")}
+            </p>
+          </div>
+
+          <ChevronRight size={20} className="flex-shrink-0" style={{ color: "var(--color-text-tertiary)" }} />
+        </div>
+      </Link>
+    );
+  }
+
+  // ★ Premium 유저: 기존 동작 100% 유지
   return (
     <button
       onClick={onSubmit}
@@ -68,25 +127,12 @@ export function DocumentSubmitCTA({
 
         {/* Text content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3
-              className="text-[20px] leading-[25px]"
-              style={{ fontWeight: 600 }}
-            >
-              {t("visa:doc_submit_title")}
-            </h3>
-            {/* Premium badge */}
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-[13px]"
-              style={{
-                fontWeight: 600,
-                backgroundColor: "rgba(255,255,255,0.25)",
-              }}
-            >
-              <Lock size={10} strokeWidth={2.5} />
-              {t("visa:doc_premium_badge")}
-            </span>
-          </div>
+          <h3
+            className="text-[20px] leading-[25px]"
+            style={{ fontWeight: 600 }}
+          >
+            {t("visa:doc_submit_title")}
+          </h3>
           <p className="mt-1 text-[13px] leading-[18px] opacity-90">
             {isPending
               ? t("visa:doc_submitting")
