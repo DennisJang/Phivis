@@ -399,7 +399,7 @@ export function Home() {
             {feedItems.length > 0 && (
               <button
                 onClick={() => navigate("/visa")}
-                className="text-[13px] active:opacity-70 transition-opacity"
+                className="text-[13px] active:scale-[0.97] transition-transform"
                 style={{ fontWeight: 600, color: "var(--color-action-primary)" }}
               >
                 {t("home:activity_view_all")}
@@ -424,7 +424,7 @@ export function Home() {
               {feedItems.slice(0, 3).map((activity) => {
                 const Icon = activity.icon;
                 return (
-                  <button key={activity.id} className="flex w-full items-start gap-3 p-4 text-left transition-colors active:opacity-70">
+                  <button key={activity.id} className="flex w-full items-start gap-3 p-4 text-left transition-transform active:scale-[0.98]">
                     <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: `color-mix(in srgb, ${activity.iconColor} 12%, transparent)` }}>
                       <Icon size={20} style={{ color: activity.iconColor }} strokeWidth={2} />
                     </div>

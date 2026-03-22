@@ -293,7 +293,7 @@ export function Profile() {
             </div>
             <button
               onClick={() => openEditSheet('core')}
-              className="text-[15px] active:opacity-70 transition-opacity"
+              className="text-[15px] active:scale-[0.97] transition-transform"
               style={{
                 fontWeight: 600,
                 color: "var(--color-action-primary)",
@@ -324,7 +324,7 @@ export function Profile() {
             <button
               key={i}
               onClick={() => openEditSheet(item.sheet, item.targetField)}
-              className="w-full flex items-center justify-between px-5 py-3.5 text-left active:opacity-70 transition-opacity"
+              className="w-full flex items-center justify-between px-5 py-3.5 text-left active:scale-[0.98] transition-transform"
               style={{ borderColor: "var(--color-border-default)" }}
             >
               <span
@@ -412,7 +412,7 @@ export function Profile() {
               <button
                 key={i}
                 onClick={item.onPress}
-                className="w-full flex items-center gap-4 px-5 py-3.5 text-left active:opacity-70 transition-opacity"
+                className="w-full flex items-center gap-4 px-5 py-3.5 text-left active:scale-[0.98] transition-transform"
                 style={{ borderColor: "var(--color-border-default)" }}
               >
                 <Icon size={18} strokeWidth={1.5} style={{ color: "var(--color-text-secondary)" }} />
@@ -592,7 +592,7 @@ export function Profile() {
                 <button
                   key={lang.code}
                   onClick={() => handleLangChange(lang.code)}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl transition-colors active:opacity-70"
+                  className="w-full flex items-center justify-between p-4 rounded-2xl transition-transform active:scale-[0.98]"
                 >
                   <span className="text-[15px]" style={{ fontWeight: 600 }}>{lang.label}</span>
                   {i18n.language === lang.code && <Check size={18} style={{ color: "var(--color-action-primary)" }} />}
