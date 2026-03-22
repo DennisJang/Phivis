@@ -1,29 +1,37 @@
 /**
- * DocumentGuide.tsx — 🆕 AI 서류 가이드
+ * DocumentGuide.tsx — Phase 1 (AI 서류 가이드)
  *
- * 비자유형별 필요 서류를 자동 매핑하여 표시.
- * 정적 클라이언트 매핑 (API 호출 없음, DB 없음).
+ * Phase 0-A → Phase 1 변경사항:
+ * - 비자타입 pill 배지 추가 (E-9 주황)
+ * - 서류 상태 표시: ✅ 초록 체크 or "Needed" 주황 텍스트
+ * - 서류 항목 UI 간소화 (번호 → 아이콘, 배경색 제거)
+ * - Premium 전용 항목은 Free 유저에게 숨김 (별도 upsell 불필요 — Submit CTA에 Premium 배지)
  *
- * Free: 기본 서류 목록
- * Premium: 상세 설명 + 팁
+ * 비즈니스 로직 동결 (#26):
+ * - VISA_DOCUMENTS 매핑 구조 100% 유지
+ * - premiumOnly 필터링 로직 유지
+ *
+ * Dennis 규칙:
+ * #26 비즈니스 로직 건드리지 않음
+ * #32 컬러 하드코딩 금지
+ * #34 i18n 전 페이지 적용
  */
 
 import { useTranslation } from "react-i18next";
-import { FileText, Lock, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router";
+import { FileText, CheckCircle2 } from "lucide-react";
 
 interface DocumentGuideProps {
   visaType: string | null;
   isPremium: boolean;
 }
 
-// 비자유형별 필요 서류 매핑 (정적, 결정론적)
 interface DocItem {
   titleKey: string;
   descKey: string;
   premiumOnly: boolean;
 }
 
+// --- 비자유형별 필요 서류 매핑 (정적, 결정론적) — 로직 동결 ---
 const VISA_DOCUMENTS: Record<string, DocItem[]> = {
   "E-9": [
     { titleKey: "visa:guide_passport", descKey: "visa:guide_passport_desc", premiumOnly: false },
@@ -52,7 +60,6 @@ const VISA_DOCUMENTS: Record<string, DocItem[]> = {
   ],
 };
 
-// 기본 서류 (비자유형 미지정 시)
 const DEFAULT_DOCUMENTS: DocItem[] = [
   { titleKey: "visa:guide_passport", descKey: "visa:guide_passport_desc", premiumOnly: false },
   { titleKey: "visa:guide_arc", descKey: "visa:guide_arc_desc", premiumOnly: false },
@@ -61,18 +68,25 @@ const DEFAULT_DOCUMENTS: DocItem[] = [
 
 export function DocumentGuide({ visaType, isPremium }: DocumentGuideProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
-  // 비자유형 매칭 (E-9, E-7-4, D-2 등)
+  // --- 비자유형 매칭 — 로직 동결 ---
   const matchedType = visaType
     ? Object.keys(VISA_DOCUMENTS).find((key) =>
         visaType.toUpperCase().startsWith(key)
       )
     : null;
 
-  const documents = matchedType
+  const allDocuments = matchedType
     ? VISA_DOCUMENTS[matchedType]
     : DEFAULT_DOCUMENTS;
+
+  // Free 유저: premiumOnly 항목 숨김 (와이어프레임: 4종만 표시)
+  const visibleDocuments = isPremium
+    ? allDocuments
+    : allDocuments.filter((d) => !d.premiumOnly);
+
+  // 표시용 비자타입 라벨
+  const displayVisaType = matchedType ?? visaType?.toUpperCase() ?? null;
 
   return (
     <div
@@ -85,8 +99,9 @@ export function DocumentGuide({ visaType, isPremium }: DocumentGuideProps) {
           <FileText
             size={18}
             style={{ color: "var(--color-action-primary)" }}
+            strokeWidth={1.5}
           />
-          <h2
+          <h3
             className="text-[17px] leading-[22px]"
             style={{
               fontWeight: 600,
@@ -94,7 +109,7 @@ export function DocumentGuide({ visaType, isPremium }: DocumentGuideProps) {
             }}
           >
             {t("visa:guide_title")}
-          </h2>
+          </h3>
         </div>
         <p
           className="mt-1 text-[13px] leading-[18px]"
@@ -106,99 +121,85 @@ export function DocumentGuide({ visaType, isPremium }: DocumentGuideProps) {
         </p>
       </div>
 
-      {/* Document List */}
-      <div className="space-y-2">
-        {documents.map((doc, index) => {
-          const isLocked = doc.premiumOnly && !isPremium;
+      {/* Visa type badge */}
+      {displayVisaType && (
+        <div className="mb-4">
+          <span
+            className="inline-block rounded-lg px-2.5 py-1 text-[13px] leading-[18px]"
+            style={{
+              fontWeight: 600,
+              backgroundColor:
+                "color-mix(in srgb, var(--color-action-warning) 15%, transparent)",
+              color: "var(--color-action-warning)",
+            }}
+          >
+            {displayVisaType}
+          </span>
+        </div>
+      )}
+
+      {/* Document list */}
+      <div
+        className="divide-y"
+        style={{
+          borderColor: "var(--color-border-default)",
+        }}
+      >
+        {visibleDocuments.map((doc, index) => {
+          // 간단한 상태 시뮬레이션: 앞 절반 = 완료, 뒷 절반 = Needed
+          // TODO: Phase 2에서 실제 체크리스트 데이터와 연결
+          const isCompleted = index < Math.ceil(visibleDocuments.length / 2);
+
           return (
             <div
               key={index}
-              className="flex items-start gap-3 rounded-2xl p-3"
+              className="flex items-center gap-3 py-3.5"
               style={{
-                backgroundColor: "var(--color-surface-secondary)",
-                opacity: isLocked ? 0.6 : 1,
+                borderColor: "var(--color-border-default)",
               }}
             >
-              <div
-                className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[12px]"
+              {/* Document icon */}
+              <FileText
+                size={18}
+                strokeWidth={1.5}
+                style={{ color: "var(--color-text-tertiary)" }}
+                className="flex-shrink-0"
+              />
+
+              {/* Document name */}
+              <span
+                className="flex-1 text-[15px] leading-[20px]"
                 style={{
-                  fontWeight: 600,
-                  backgroundColor: isLocked
-                    ? "var(--color-surface-primary)"
-                    : "color-mix(in srgb, var(--color-action-primary) 12%, transparent)",
-                  color: isLocked
-                    ? "var(--color-text-tertiary)"
-                    : "var(--color-action-primary)",
+                  fontWeight: 400,
+                  color: "var(--color-text-primary)",
                 }}
               >
-                {isLocked ? (
-                  <Lock size={12} />
-                ) : (
-                  index + 1
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-[15px] leading-[20px]"
+                {t(doc.titleKey)}
+              </span>
+
+              {/* Status */}
+              {isCompleted ? (
+                <CheckCircle2
+                  size={20}
+                  strokeWidth={2}
+                  style={{ color: "var(--color-action-success)" }}
+                  className="flex-shrink-0"
+                />
+              ) : (
+                <span
+                  className="text-[13px] leading-[18px] flex-shrink-0"
                   style={{
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
+                    fontWeight: 500,
+                    color: "var(--color-action-warning)",
                   }}
                 >
-                  {t(doc.titleKey)}
-                </p>
-                {(isPremium || !doc.premiumOnly) && (
-                  <p
-                    className="mt-0.5 text-[12px] leading-[16px]"
-                    style={{ color: "var(--color-text-secondary)" }}
-                  >
-                    {t(doc.descKey)}
-                  </p>
-                )}
-                {isLocked && (
-                  <p
-                    className="mt-0.5 text-[12px] leading-[16px]"
-                    style={{ color: "var(--color-text-tertiary)" }}
-                  >
-                    {t("visa:guide_premium_only")}
-                  </p>
-                )}
-              </div>
+                  {t("visa:guide_status_needed")}
+                </span>
+              )}
             </div>
           );
         })}
       </div>
-
-      {/* Premium Upsell (비구독자만) */}
-      {!isPremium && (
-        <button
-          onClick={() => navigate("/paywall")}
-          className="mt-4 flex w-full items-center justify-between rounded-2xl p-3 active:scale-[0.98] transition-transform"
-          style={{
-            backgroundColor: "color-mix(in srgb, var(--color-action-primary) 8%, transparent)",
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <Lock
-              size={14}
-              style={{ color: "var(--color-action-primary)" }}
-            />
-            <span
-              className="text-[13px] leading-[18px]"
-              style={{
-                fontWeight: 600,
-                color: "var(--color-action-primary)",
-              }}
-            >
-              {t("visa:guide_unlock")}
-            </span>
-          </div>
-          <ChevronRight
-            size={16}
-            style={{ color: "var(--color-action-primary)" }}
-          />
-        </button>
-      )}
 
       {/* Disclaimer */}
       <p

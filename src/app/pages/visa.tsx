@@ -1,17 +1,20 @@
 /**
- * visa.tsx — Phase 0-A (Visa Autopilot Hub — Orchestrator)
+ * visa.tsx — Phase 1 (Visa Autopilot Hub — Orchestrator)
  *
- * 이 파일은 섹션 컴포넌트를 순서대로 조합하는 역할만 합니다.
- * 비즈니스 로직은 각 컴포넌트 내부 또는 store에 있습니다.
+ * Phase 0-A → Phase 1 변경사항:
+ * - ScoreRing 직접 호출 제거 (KpointSimulator가 내장)
+ * - KpointSimulator에 loading prop 추가
+ * - 헤더에 알림 벨 아이콘 추가 (와이어프레임)
+ * - 비즈니스 로직 100% 동결 (#26)
  *
- * 섹션 순서 (SETTLE_ARCHITECTURE_V2.md Layer 4):
- * 1. Score Ring (기존)
- * 2. E-7-4 K-point Simulator (🆕)
- * 3. Requirements Checklist (기존)
- * 4. KIIP Progress (기존)
- * 5. Document Submit CTA (기존, "팩스" → "서류 제출" 리브랜딩)
- * 6. Wage Calculator (🆕)
- * 7. Lawyer Match CTA (기존)
+ * 섹션 순서 (Phase 1):
+ * 1. KpointSimulator (ScoreRing 내장 — Block A)
+ * 2. Requirements Checklist
+ * 3. KIIP Progress
+ * 4. Document Submit CTA
+ * 5. Document Guide
+ * 6. Wage Calculator
+ * 7. Lawyer Match CTA
  * 8. Liability Sheet (면책 모달)
  *
  * Dennis 규칙:
@@ -25,12 +28,13 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Bell } from "lucide-react";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useDashboardStore } from "../../stores/useDashboardStore";
 import { useSubmitStore } from "../../stores/useSubmitStore";
 
 // --- Section Components ---
-import { ScoreRing } from "../components/visa/ScoreRing";
+// ScoreRing은 KpointSimulator 내부에서 호출됨 (Phase 1 통합)
 import { KpointSimulator } from "../components/visa/KpointSimulator";
 import { RequirementsChecklist } from "../components/visa/RequirementsChecklist";
 import { KiipProgress } from "../components/visa/KiipProgress";
@@ -77,7 +81,6 @@ export function Visa() {
   }, [user?.id, visaTracker, hydrate]);
 
   // --- 동적 데이터 ---
-  const score = visaTracker?.total_score ?? 0;
   const kiipStage = visaTracker?.kiip_stage ?? 0;
   const checklist =
     visaTracker?.checklist && visaTracker.checklist.length > 0
@@ -121,7 +124,7 @@ export function Visa() {
   // ============================================
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen pb-32"
       style={{ backgroundColor: "var(--color-surface-secondary)" }}
     >
       {/* Header */}
@@ -132,9 +135,9 @@ export function Visa() {
           borderBottom: "1px solid var(--color-border-default)",
         }}
       >
-        <div className="px-4 py-4">
+        <div className="flex items-center justify-between px-4 py-4">
           <h1
-            className="text-[20px] leading-[25px]"
+            className="text-[28px] leading-[34px]"
             style={{
               fontWeight: 600,
               color: "var(--color-text-primary)",
@@ -142,60 +145,76 @@ export function Visa() {
           >
             {t("visa:title")}
           </h1>
+          <button
+            className="flex items-center justify-center"
+            style={{
+              width: 44,
+              height: 44,
+              color: "var(--color-text-primary)",
+            }}
+            aria-label={t("visa:notifications")}
+          >
+            <Bell size={24} strokeWidth={1.5} />
+          </button>
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
-        {/* 1. Score Ring */}
-        <ScoreRing
-          score={score}
-          targetScore={100}
-          loading={loading}
-          visaType={visaTracker?.visa_type ?? null}
-          ageScore={visaTracker?.age_score ?? 0}
-          kiipStage={kiipStage}
-          stayYears={
-            userProfile?.created_at
-              ? Math.max(
-                  0,
-                  (Date.now() - new Date(userProfile.created_at).getTime()) /
-                    (1000 * 60 * 60 * 24 * 365)
-                )
-              : 0
-          }
-        />
+      <div className="px-4 py-6 space-y-4">
+        {/* 1. Block A — K-point Simulator (ScoreRing 내장) */}
+        <KpointSimulator visaTracker={visaTracker} loading={loading} />
 
-        {/* 2. E-7-4 K-point Simulator (🆕) */}
-        <KpointSimulator visaTracker={visaTracker} />
-
-        {/* 3. Requirements Checklist */}
+        {/* 2. Requirements Checklist */}
         <RequirementsChecklist
           checklist={checklist}
           onToggle={toggleChecklistItem}
         />
 
-        {/* 4. KIIP Progress */}
+        {/* 3. KIIP Progress */}
         <KiipProgress currentStage={kiipStage} />
 
-        {/* 5. Document Submit CTA (리브랜딩: 팩스 → 서류 제출) */}
-        <DocumentSubmitCTA
-          isProfileComplete={isProfileComplete}
-          profileReadiness={profileReadiness}
-          faxStatus={faxStatus}
-          onSubmit={handleFaxCTA}
-        />
+        {/* ── Block B: Services ── */}
+        <div className="mt-2">
+          <h2
+            className="text-[22px] leading-[28px] mb-3"
+            style={{
+              fontWeight: 600,
+              color: "var(--color-text-primary)",
+            }}
+          >
+            {t("visa:services_title")}
+          </h2>
 
-        {/* 6. AI Document Guide (🆕) */}
-        <DocumentGuide
-          visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
-          isPremium={userProfile?.subscription_plan === "premium"}
-        />
+          <div className="space-y-4">
+            {/* 4. AI Document Guide */}
+            <DocumentGuide
+              visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
+              isPremium={userProfile?.subscription_plan === "premium"}
+            />
 
-        {/* 7. Wage Calculator (🆕) */}
+            {/* 5. Document Submit CTA */}
+            <DocumentSubmitCTA
+              isProfileComplete={isProfileComplete}
+              profileReadiness={profileReadiness}
+              faxStatus={faxStatus}
+              onSubmit={handleFaxCTA}
+            />
+
+            {/* 6. Lawyer Match CTA */}
+            <LawyerMatchCTA />
+
+            {/* Block B disclaimer (카드 바깥) */}
+            <p
+              className="text-[11px] leading-[13px]"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
+              {t("visa:lawyer_disclaimer")}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Block C: Tools ── */}
+        {/* 7. Wage Calculator */}
         <WageCalculator />
-
-        {/* 8. Lawyer Match CTA */}
-        <LawyerMatchCTA />
       </div>
 
       {/* 8. Liability Sheet (면책 모달) */}
