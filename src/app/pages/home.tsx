@@ -84,9 +84,9 @@ const CURRENCY_TO_COUNTRY: Record<string, string> = {
 };
 
 interface ExchangeRateData {
-  currency_code: string;
+  currency: string;
   rate: number;
-  base_currency: string;
+  source: string;
 }
 
 export function Home() {
@@ -109,21 +109,29 @@ export function Home() {
 
   // --- 환율 fetch — 동결 ---
   const fetchExchangeRate = useCallback(async () => {
-    try {
-      const country = userProfile?.frequent_country ?? "USD";
-      const { data } = await supabase
-        .from("exchange_rates")
-        .select("currency_code, rate, base_currency")
-        .eq("currency_code", country)
-        .order("fetched_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (data) setExchangeRate(data);
-    } catch {
-      // 빈 상태로 표시
-    }
-  }, [userProfile?.frequent_country]);
+  try {
+    // frequent_country는 국가코드(VN), exchange_rates는 통화코드(VND)
+    // 국가코드 → 통화코드 매핑 필요
+    const COUNTRY_TO_CURRENCY: Record<string, string> = {
+      VN: "VND", CN: "CNY", TH: "THB", PH: "PHP", ID: "IDR",
+      NP: "NPR", KH: "KHR", UZ: "UZS", MN: "MNT", BD: "BDT",
+      US: "USD", KR: "KRW",
+    };
+    const countryCode = userProfile?.frequent_country ?? "US";
+    const currency = COUNTRY_TO_CURRENCY[countryCode] ?? "USD";
 
+    const { data } = await supabase
+      .from("exchange_rates")
+      .select("currency, rate, source")
+      .eq("currency", currency)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) setExchangeRate(data);
+  } catch {
+    // 빈 상태로 표시
+  }
+}, [userProfile?.frequent_country]);
   // --- 송금 합계 fetch — 동결 ---
   const fetchMonthlyRemit = useCallback(async () => {
     if (!user?.id) return;
@@ -325,8 +333,8 @@ export function Home() {
               <div className="h-5 w-20 animate-pulse rounded-lg" style={{ backgroundColor: "var(--color-surface-secondary)" }} />
             ) : exchangeRate ? (
               <div className="flex items-center gap-2">
-                <CountryFlag code={CURRENCY_TO_COUNTRY[exchangeRate.currency_code] ?? exchangeRate.currency_code} size={18} />
-                <span className="text-[13px] leading-[18px]" style={{ color: "var(--color-text-secondary)" }}>{exchangeRate.currency_code}</span>
+                <CountryFlag code={CURRENCY_TO_COUNTRY[exchangeRate.currency] ?? exchangeRate.currency} size={18} />
+                <span className="text-[13px] leading-[18px]" style={{ color: "var(--color-text-secondary)" }}>{exchangeRate.currency}</span>
                 <span className="text-[17px] leading-[22px]" style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>{exchangeRate.rate.toFixed(2)}</span>
               </div>
             ) : (
