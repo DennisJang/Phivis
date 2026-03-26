@@ -1,13 +1,13 @@
 /**
- * visa.tsx — Phase 2-B (Visa Autopilot Hub — Premium Gating)
+ * visa.tsx — Phase 3-A (Visa Autopilot Hub — Document Prep 추가)
  *
- * Phase 2-B 변경사항:
- * - isPremium 계산 추가
- * - DocumentSubmitCTA에 isPremium prop 전달 (게이팅)
- * - DocumentGuide에 isPremium prop 이미 전달됨 (확인)
+ * Phase 3-A 변경사항:
+ * - DocumentPrep 섹션 추가 (Block B Services 내, DocumentGuide 위)
+ * - userProfile prop 전달
  *
- * Phase 1 유지:
- * - 섹션 순서, 컴포넌트 구성, 비즈니스 로직 100% 동결
+ * Phase 2-B 유지:
+ * - isPremium 계산, DocumentSubmitCTA 게이팅
+ * - 섹션 순서 외 비즈니스 로직 100% 동결
  *
  * Dennis 규칙:
  * #3  submitFax() 인자 없음
@@ -29,6 +29,7 @@ import { useSubmitStore } from "../../stores/useSubmitStore";
 import { KpointSimulator } from "../components/visa/KpointSimulator";
 import { RequirementsChecklist } from "../components/visa/RequirementsChecklist";
 import { KiipProgress } from "../components/visa/KiipProgress";
+import { DocumentPrep } from "../components/visa/DocumentPrep";
 import { DocumentSubmitCTA } from "../components/visa/DocumentSubmitCTA";
 import { WageCalculator } from "../components/visa/WageCalculator";
 import { DocumentGuide } from "../components/visa/DocumentGuide";
@@ -179,6 +180,13 @@ export function Visa() {
           </h2>
 
           <div className="space-y-4">
+            {/* ★ Phase 3-A: Document Prep (서류 준비 현황) */}
+            <DocumentPrep
+              visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
+              isPremium={isPremium}
+              userProfile={userProfile as Record<string, unknown> | null}
+            />
+
             {/* 4. AI Document Guide */}
             <DocumentGuide
               visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
