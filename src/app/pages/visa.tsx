@@ -1,12 +1,15 @@
 /**
- * visa.tsx — Phase 3-B Sprint 3 (civilType 동기화 완성)
+ * visa.tsx — Phase 3-C (Accordion UX 리뉴얼)
  *
- * Sprint 3 변경사항:
- * - SubmissionGuide 섹션 추가
- * - civilType state: visa.tsx에서 관리 → DocumentPrep + SubmissionGuide 동기화
- * - DocumentPrep.onCivilTypeChange → setCivilType
+ * Phase 3-C 변경사항:
+ * - AccordionCard로 각 섹션 래핑
+ * - openSection state: 한 번에 1개만 펼침
+ * - D-Day ≤ 30: DocumentPrep 자동 펼침 + 긴급 배너
+ * - 접힌 상태에서 요약값 표시 (점수, 완성도 등)
+ * - Block A/B/C 섹션 헤더 제거 → 카드 자체가 계층 구조
  *
  * 비즈니스 로직 100% 동결 (#26)
+ * 모든 state, handler, import, prop 전달 — 변경 없음.
  *
  * Dennis 규칙:
  * #3  submitFax() 인자 없음
@@ -17,9 +20,12 @@
  * #35 급여 계산기 면책 3중 구조 필수
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Bell } from "lucide-react";
+import {
+  Bell, Target, ClipboardCheck, GraduationCap, FileCheck,
+  MapPin, BookOpen, Send, Scale, Calculator,
+} from "lucide-react";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useDashboardStore } from "../../stores/useDashboardStore";
 import { useSubmitStore } from "../../stores/useSubmitStore";
@@ -36,6 +42,7 @@ import { WageCalculator } from "../components/visa/WageCalculator";
 import { DocumentGuide } from "../components/visa/DocumentGuide";
 import { LawyerMatchCTA } from "../components/visa/LawyerMatchCTA";
 import { LiabilitySheet } from "../components/visa/LiabilitySheet";
+import { AccordionCard } from "../components/visa/AccordionCard";
 
 // 출입국관리사무소 팩스번호 (서울남부 기본값)
 const IMMIGRATION_FAX_NUMBER = "02-2650-6399";
@@ -70,6 +77,13 @@ export function Visa() {
   // ★ Sprint 3: civilType state for SubmissionGuide sync
   const [civilType, setCivilType] = useState("extension");
 
+  // ★ Phase 3-C: Accordion state — 한 번에 1개만 열림
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const handleToggle = (id: string) => {
+    setOpenSection((prev) => (prev === id ? null : id));
+  };
+
   // --- Hydrate (최초 1회) — 로직 동결 ---
   useEffect(() => {
     if (user?.id && !visaTracker) {
@@ -98,6 +112,40 @@ export function Visa() {
     : 0;
   const isProfileComplete = profileReadiness >= 4;
 
+  // ★ Phase 3-C: D-Day 계산 (자동 펼침용)
+  const dDay = useMemo(() => {
+    const expiry = userProfile?.visa_expiry;
+    if (!expiry) return null;
+    const expiryDate = new Date(expiry);
+    const today = new Date();
+    return Math.ceil(
+      (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+  }, [userProfile?.visa_expiry]);
+
+  // D-Day ≤ 30: DocumentPrep 자동 펼침 (최초 1회)
+  useEffect(() => {
+    if (dDay !== null && dDay <= 30 && openSection === null) {
+      setOpenSection("doc-prep");
+    }
+  }, [dDay]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // --- Accordion 요약값 ---
+  const kpointTotal = useMemo(() => {
+    if (!visaTracker) return 0;
+    return (
+      (visaTracker.age_score ?? 0) +
+      (visaTracker.income_score ?? 0) +
+      (visaTracker.korean_score ?? 0) +
+      (visaTracker.social_score ?? 0) +
+      (visaTracker.volunteer_score ?? 0)
+    );
+  }, [visaTracker]);
+
+  const checklistCompleted = checklist.filter(
+    (c: { completed: boolean }) => c.completed
+  ).length;
+
   // --- 팩스 CTA 핸들러 — 로직 동결 ---
   const handleFaxCTA = () => {
     if (!user || !userProfile) return;
@@ -120,13 +168,14 @@ export function Visa() {
   };
 
   // ============================================
-  // Render — 섹션 조합
+  // Render
   // ============================================
   return (
     <div
       className="min-h-screen pb-32"
       style={{ backgroundColor: "var(--color-surface-secondary)" }}
     >
+        <p style={{ background: "red", color: "white", padding: 20, fontSize: 24 }}>ACCORDION TEST</p>
       {/* Header */}
       <header
         className="sticky top-0 z-10"
@@ -157,100 +206,254 @@ export function Visa() {
             <Bell size={24} strokeWidth={1.5} />
           </button>
         </div>
+
+        {/* ★ Phase 3-C: D-Day 긴급 배너 */}
+        {dDay !== null && dDay <= 30 && (
+          <div
+            className="mx-4 mb-3 px-4 py-2.5 rounded-2xl flex items-center gap-2"
+            style={{
+              backgroundColor:
+                dDay <= 7
+                  ? "rgba(255,59,48,0.1)"
+                  : "rgba(255,149,0,0.1)",
+            }}
+          >
+            <span
+              className="text-[13px] leading-[18px]"
+              style={{
+                fontWeight: 600,
+                color:
+                  dDay <= 7
+                    ? "var(--color-action-error)"
+                    : "var(--color-action-warning)",
+              }}
+            >
+              ⚠️{" "}
+              {t("visa:dday_urgent", {
+                days: dDay,
+                defaultValue: `Visa expires in ${dDay} days`,
+              })}
+            </span>
+          </div>
+        )}
       </header>
 
-      <div className="px-4 py-6 space-y-4">
-        {/* 1. Block A — K-point Simulator (ScoreRing 내장) */}
-        <KpointSimulator visaTracker={visaTracker} loading={loading} />
+      <div className="px-4 py-6 space-y-3">
+        {/* ── 1. K-point Simulator ── */}
+        <AccordionCard
+          id="kpoint"
+          title={t("visa:kpoint_section_title", {
+            defaultValue: "E-7-4 Eligibility",
+          })}
+          icon={Target}
+          summary={
+            visaTracker ? (
+              <span
+                className="text-[13px] leading-[18px]"
+                style={{
+                  fontWeight: 700,
+                  color:
+                    kpointTotal >= 700
+                      ? "var(--color-action-success)"
+                      : "var(--color-action-primary)",
+                }}
+              >
+                {kpointTotal}/700
+              </span>
+            ) : undefined
+          }
+          isOpen={openSection === "kpoint"}
+          onToggle={handleToggle}
+        >
+          <KpointSimulator visaTracker={visaTracker} loading={loading} />
+        </AccordionCard>
 
-        {/* 2. Requirements Checklist */}
-        <RequirementsChecklist
-          checklist={checklist}
-          onToggle={toggleChecklistItem}
-        />
-
-        {/* 3. KIIP Progress */}
-        <KiipProgress currentStage={kiipStage} />
-
-        {/* ── Block B: Services ── */}
-        <div className="mt-2">
-          <h2
-            className="text-[22px] leading-[28px] mb-3"
-            style={{
-              fontWeight: 600,
-              color: "var(--color-text-primary)",
-            }}
-          >
-            {t("visa:services_title")}
-          </h2>
-
-          <div className="space-y-4">
-            {/* ★ Document Prep (서류 준비) */}
-            <DocumentPrep
-              visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
-              isPremium={isPremium}
-              userProfile={userProfile as Record<string, unknown> | null}
-              userId={user?.id}
-              onUpgrade={() => navigate("/paywall")}
-              onCivilTypeChange={setCivilType}
-            />
-
-            {/* ★ Sprint 3: Submission Guide (제출 가이드) */}
-            <SubmissionGuide
-              visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
-              civilType={civilType}
-              userAddress={userProfile?.address_korea as string | null}
-              completeness={
-                isProfileComplete ? 60 : profileReadiness * 15
-              }
-            />
-
-            {/* 4. AI Document Guide */}
-            <DocumentGuide
-              visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
-              isPremium={isPremium}
-            />
-
-            {/* 5. Document Submit CTA — ★ isPremium 전달 */}
-            <DocumentSubmitCTA
-              isProfileComplete={isProfileComplete}
-              profileReadiness={profileReadiness}
-              faxStatus={faxStatus}
-              onSubmit={handleFaxCTA}
-              isPremium={isPremium}
-            />
-
-            {/* 6. Lawyer Match CTA */}
-            <LawyerMatchCTA />
-
-            {/* Block B disclaimer (카드 바깥) */}
-            <p
-              className="text-[11px] leading-[13px]"
-              style={{ color: "var(--color-text-tertiary)" }}
+        {/* ── 2. Requirements Checklist ── */}
+        <AccordionCard
+          id="requirements"
+          title={t("visa:requirements_title", {
+            defaultValue: "Requirements",
+          })}
+          icon={ClipboardCheck}
+          summary={
+            <span
+              className="text-[13px] leading-[18px]"
+              style={{
+                fontWeight: 600,
+                color:
+                  checklistCompleted === checklist.length
+                    ? "var(--color-action-success)"
+                    : "var(--color-text-secondary)",
+              }}
             >
-              {t("visa:lawyer_disclaimer")}
-            </p>
-          </div>
-        </div>
+              {checklistCompleted}/{checklist.length}
+            </span>
+          }
+          isOpen={openSection === "requirements"}
+          onToggle={handleToggle}
+        >
+          <RequirementsChecklist
+            checklist={checklist}
+            onToggle={toggleChecklistItem}
+          />
+        </AccordionCard>
 
-        {/* ── Block C: Tools ── */}
-        <div className="mt-2">
-          <h2
-            className="text-[22px] leading-[28px] mb-3"
-            style={{
-              fontWeight: 600,
-              color: "var(--color-text-primary)",
-            }}
+        {/* ── 3. KIIP Progress ── */}
+        <AccordionCard
+          id="kiip"
+          title={t("visa:kiip_title", { defaultValue: "KIIP Progress" })}
+          icon={GraduationCap}
+          summary={
+            <span
+              className="text-[13px] leading-[18px]"
+              style={{
+                fontWeight: 600,
+                color:
+                  kiipStage >= 5
+                    ? "var(--color-action-success)"
+                    : "var(--color-text-secondary)",
+              }}
+            >
+              {kiipStage}/5
+            </span>
+          }
+          isOpen={openSection === "kiip"}
+          onToggle={handleToggle}
+        >
+          <KiipProgress currentStage={kiipStage} />
+        </AccordionCard>
+
+        {/* ── 4. Document Prep (서류 준비) ── */}
+        <AccordionCard
+          id="doc-prep"
+          title={t("visa:doc_prep.title", { defaultValue: "Document Prep" })}
+          icon={FileCheck}
+          iconColor={
+            dDay !== null && dDay <= 30
+              ? "var(--color-action-warning)"
+              : "var(--color-action-primary)"
+          }
+          isOpen={openSection === "doc-prep"}
+          onToggle={handleToggle}
+          keepMounted
+        >
+          <DocumentPrep
+            visaType={
+              visaTracker?.visa_type ?? userProfile?.visa_type ?? null
+            }
+            isPremium={isPremium}
+            userProfile={userProfile as Record<string, unknown> | null}
+            userId={user?.id}
+            onUpgrade={() => navigate("/paywall")}
+            onCivilTypeChange={setCivilType}
+          />
+        </AccordionCard>
+
+        {/* ── 5. Submission Guide ── */}
+        <AccordionCard
+          id="submission"
+          title={t("visa:submission_guide.title", {
+            defaultValue: "Submission Guide",
+          })}
+          icon={MapPin}
+          isOpen={openSection === "submission"}
+          onToggle={handleToggle}
+        >
+          <SubmissionGuide
+            visaType={
+              visaTracker?.visa_type ?? userProfile?.visa_type ?? null
+            }
+            civilType={civilType}
+            userAddress={userProfile?.address_korea as string | null}
+            completeness={
+              isProfileComplete ? 60 : profileReadiness * 15
+            }
+          />
+        </AccordionCard>
+
+        {/* ── 6. AI Document Guide ── */}
+        <AccordionCard
+          id="doc-guide"
+          title={t("visa:doc_guide_title", {
+            defaultValue: "AI Document Guide",
+          })}
+          icon={BookOpen}
+          summary={
+            !isPremium ? (
+              <span
+                className="text-[11px] px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: "var(--color-surface-secondary)",
+                  color: "var(--color-text-secondary)",
+                  fontWeight: 500,
+                }}
+              >
+                Premium
+              </span>
+            ) : undefined
+          }
+          isOpen={openSection === "doc-guide"}
+          onToggle={handleToggle}
+        >
+          <DocumentGuide
+            visaType={
+              visaTracker?.visa_type ?? userProfile?.visa_type ?? null
+            }
+            isPremium={isPremium}
+          />
+        </AccordionCard>
+
+        {/* ── 7. Document Submit (팩스) ── */}
+        <AccordionCard
+          id="doc-submit"
+          title={t("visa:doc_submit_title", {
+            defaultValue: "Submit Documents",
+          })}
+          icon={Send}
+          isOpen={openSection === "doc-submit"}
+          onToggle={handleToggle}
+        >
+          <DocumentSubmitCTA
+            isProfileComplete={isProfileComplete}
+            profileReadiness={profileReadiness}
+            faxStatus={faxStatus}
+            onSubmit={handleFaxCTA}
+            isPremium={isPremium}
+          />
+        </AccordionCard>
+
+        {/* ── 8. Professional Help ── */}
+        <AccordionCard
+          id="lawyer"
+          title={t("visa:lawyer_title", {
+            defaultValue: "Professional Help",
+          })}
+          icon={Scale}
+          isOpen={openSection === "lawyer"}
+          onToggle={handleToggle}
+        >
+          <LawyerMatchCTA />
+          <p
+            className="text-[11px] leading-[13px] mt-3"
+            style={{ color: "var(--color-text-tertiary)" }}
           >
-            {t("visa:tools_title")}
-          </h2>
+            {t("visa:lawyer_disclaimer")}
+          </p>
+        </AccordionCard>
 
-          {/* 7. Wage Calculator */}
+        {/* ── 9. Wage Calculator ── */}
+        <AccordionCard
+          id="wage"
+          title={t("visa:tools_title", { defaultValue: "Wage Calculator" })}
+          icon={Calculator}
+          isOpen={openSection === "wage"}
+          onToggle={handleToggle}
+        >
           <WageCalculator />
-        </div>
+        </AccordionCard>
       </div>
 
-      {/* 8. Liability Sheet (면책 모달) */}
+      {/* Liability Sheet (면책 모달) — Accordion 바깥 */}
       <LiabilitySheet
         isOpen={faxSheetOpen}
         onClose={() => {
