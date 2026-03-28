@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, Check, Crown, Sparkles, Loader2 } from "lucide-react";
 import { Logo } from "../components/logo";

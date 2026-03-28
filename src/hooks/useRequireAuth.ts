@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/useAuthStore'
 
 export function useRequireAuth() {

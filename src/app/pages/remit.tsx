@@ -15,7 +15,7 @@
 // Dennis 규칙 #34: i18n 적용 범위 = 전 페이지.
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ChevronDown,

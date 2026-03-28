@@ -18,7 +18,7 @@
 
 import { useTranslation } from "react-i18next";
 import { Send, Check, Loader2, ChevronRight, Lock } from "lucide-react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import type { SubmitStatus } from "../../../types";
 
 interface DocumentSubmitCTAProps {

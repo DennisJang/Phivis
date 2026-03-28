@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useRequireAuth } from '../../hooks/useRequireAuth'
 import { useDashboardStore } from '../../stores/useDashboardStore'
 import { useAuthStore } from '../../stores/useAuthStore'

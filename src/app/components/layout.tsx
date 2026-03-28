@@ -17,8 +17,8 @@
  * #34 i18n 전 페이지 적용
  */
 
-import { createBrowserRouter, Navigate } from "react-router";
-import { Outlet, useLocation, useNavigate } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Home, FileText, Send, User } from "lucide-react";
 

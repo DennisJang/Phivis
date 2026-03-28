@@ -15,7 +15,7 @@
  * #35 급여 계산기 면책 포함
  */
 
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 
 export function Terms() {

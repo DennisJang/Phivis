@@ -11,7 +11,7 @@
 // Dennis 규칙 #1, #26, #32, #34 준수
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import {
   User,
   Crown,

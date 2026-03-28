@@ -14,7 +14,7 @@
  * #32 컬러 하드코딩 금지
  */
 
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 
 export function Privacy() {

@@ -1,6 +1,6 @@
 // 경로: src/app/pages/housing.tsx
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { ChevronLeft, Scan, Shield, Scale, ChevronRight, CheckCircle, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/lib/supabase";
