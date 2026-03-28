@@ -1,13 +1,12 @@
 /**
- * visa.tsx — Phase 3-A (Visa Autopilot Hub — Document Prep 추가)
+ * visa.tsx — Phase 3-B Sprint 3 (Submission Guide 추가)
  *
- * Phase 3-A 변경사항:
- * - DocumentPrep 섹션 추가 (Block B Services 내, DocumentGuide 위)
- * - userProfile prop 전달
+ * Sprint 3 변경사항:
+ * - SubmissionGuide 섹션 추가 (DocumentPrep 아래, DocumentGuide 위)
+ * - civilType state 추가 (DocumentPrep ↔ SubmissionGuide 동기화)
+ * - completeness를 SubmissionGuide에 전달
  *
- * Phase 2-B 유지:
- * - isPremium 계산, DocumentSubmitCTA 게이팅
- * - 섹션 순서 외 비즈니스 로직 100% 동결
+ * 비즈니스 로직 100% 동결 (#26)
  *
  * Dennis 규칙:
  * #3  submitFax() 인자 없음
@@ -31,6 +30,7 @@ import { KpointSimulator } from "../components/visa/KpointSimulator";
 import { RequirementsChecklist } from "../components/visa/RequirementsChecklist";
 import { KiipProgress } from "../components/visa/KiipProgress";
 import { DocumentPrep } from "../components/visa/DocumentPrep";
+import { SubmissionGuide } from "../components/visa/SubmissionGuide";
 import { DocumentSubmitCTA } from "../components/visa/DocumentSubmitCTA";
 import { WageCalculator } from "../components/visa/WageCalculator";
 import { DocumentGuide } from "../components/visa/DocumentGuide";
@@ -66,6 +66,9 @@ export function Visa() {
   } = useSubmitStore();
 
   const [faxSheetOpen, setFaxSheetOpen] = useState(false);
+
+  // ★ Sprint 3: civilType state for SubmissionGuide sync
+  const [civilType, setCivilType] = useState("extension");
 
   // --- Hydrate (최초 1회) — 로직 동결 ---
   useEffect(() => {
@@ -187,8 +190,18 @@ export function Visa() {
               visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
               isPremium={isPremium}
               userProfile={userProfile as Record<string, unknown> | null}
-              userId={user?.id}     
+              userId={user?.id}
               onUpgrade={() => navigate("/paywall")}
+            />
+
+            {/* ★ Sprint 3: Submission Guide (제출 가이드) */}
+            <SubmissionGuide
+              visaType={visaTracker?.visa_type ?? userProfile?.visa_type ?? null}
+              civilType={civilType}
+              userAddress={userProfile?.address_korea as string | null}
+              completeness={
+                isProfileComplete ? 60 : profileReadiness * 15
+              }
             />
 
             {/* 4. AI Document Guide */}
