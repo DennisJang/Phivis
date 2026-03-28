@@ -72,6 +72,7 @@ export function Visa() {
   // ★ VisaIntent store
   const {
     intent,
+    loading: intentLoading,
     hydrate: hydrateIntent,
     createIntent,
     refreshScore,
@@ -103,14 +104,11 @@ export function Visa() {
 
   // ★ VisaIntent: 유저의 비자 정보가 로드되면 활성 intent 없으면 자동 생성
   useEffect(() => {
-    if (!user?.id || !userProfile?.visa_type) return;
-    if (intent !== null) return; // 이미 활성 intent 있으면 skip
-    // intent가 null이고 loading 끝났으면 자동 생성
-    const store = useVisaIntentStore.getState();
-    if (!store.loading && store.intent === null) {
-      createIntent(user.id, userProfile.visa_type as string, "extension");
-    }
-  }, [user?.id, userProfile?.visa_type, intent, createIntent]);
+  if (!user?.id || !userProfile?.visa_type) return;
+  if (intent !== null) return;
+  if (intentLoading) return;
+  createIntent(user.id, userProfile.visa_type as string, "extension");
+  }, [user?.id, userProfile?.visa_type, intent, intentLoading, createIntent]);
 
   // ★ civilType 변경 핸들러 (DocumentPrep + SubmissionGuide + VisaIntent 동기화)
   const handleCivilTypeChange = useCallback((ct: string) => {
