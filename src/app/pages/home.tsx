@@ -1,21 +1,10 @@
 /**
- * home.tsx — Phase 2-A → 2-B (Glanceable Dashboard — Enhanced)
+ * home.tsx — Phase 4 Sprint 2 (진행 중 민원 카드 추가)
  *
- * Phase 2-B 변경사항:
- * P0-1: remit_logs 400 에러 수정 — amount_krw → send_amount_krw (실제 컬럼명)
- *       + 문자열→숫자 변환 (DB에 string으로 저장됨)
- *
- * Phase 2-A 변경사항 (유지):
- * 1. "전체보기" (View All) 버튼에 onClick 네비게이션 연결
- * 2. Premium 구독 위젯 추가 — Free vs Premium 기능 차이를 시각적으로 표시
- * 3. 카드 간 여백(space-y-4 → space-y-5) — 숨 쉴 공간 확보
- * 4. 기존 Premium 배너를 구독 위젯으로 교체
- *
- * 동결된 로직 (절대 수정 금지):
- * - calcDDay(), mapEventIcon(), formatTimeAgo()
- * - useAuthStore, useDashboardStore hydrate 호출
- * - 환율 fetch 로직
- * - 피드 매핑 로직
+ * Sprint 2 변경사항:
+ * - useVisaIntentStore import + hydrate
+ * - Welcome 바로 아래에 "진행 중 민원" 카드 (intent가 있을 때만)
+ * - 기존 모든 비즈니스 로직 100% 동결
  *
  * Dennis 규칙:
  * #26 비즈니스 로직 건드리지 않음
@@ -38,12 +27,14 @@ import {
   Shield,
   Zap,
   Users,
+  ClipboardList,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Logo } from "../components/logo";
 import { CountryFlag } from "../components/CountryFlag";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useDashboardStore } from "../../stores/useDashboardStore";
+import { useVisaIntentStore } from "../../stores/useVisaIntentStore"; // ★ Sprint 2
 import { supabase } from "../../lib/supabase";
 
 // ============================================
@@ -99,22 +90,29 @@ export function Home() {
   const { userProfile, visaTracker, lifeEvents, loading, hydrate } =
     useDashboardStore();
 
+  // ★ Sprint 2: VisaIntent store
+  const {
+    intent,
+    hydrate: hydrateIntent,
+  } = useVisaIntentStore();
+
   const [exchangeRate, setExchangeRate] = useState<ExchangeRateData | null>(null);
   const [monthlyRemit, setMonthlyRemit] = useState<number | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
 
-  // --- hydrate — 동결 ---
+  // --- hydrate — 동결 + ★ Sprint 2: intent hydrate ---
   useEffect(() => {
     if (user?.id && !userProfile) {
       hydrate(user.id);
     }
-  }, [user?.id, userProfile, hydrate]);
+    if (user?.id) {
+      hydrateIntent(user.id);
+    }
+  }, [user?.id, userProfile, hydrate, hydrateIntent]);
 
   // --- 환율 fetch — 동결 ---
   const fetchExchangeRate = useCallback(async () => {
   try {
-    // frequent_country는 국가코드(VN), exchange_rates는 통화코드(VND)
-    // 국가코드 → 통화코드 매핑 필요
     const COUNTRY_TO_CURRENCY: Record<string, string> = {
       VN: "VND", CN: "CNY", TH: "THB", PH: "PHP", ID: "IDR",
       NP: "NPR", KH: "KHR", UZ: "UZS", MN: "MNT", BD: "BDT",
@@ -250,6 +248,86 @@ export function Home() {
             {t("home:subtitle")}
           </p>
         </div>
+
+        {/* ★ Sprint 2: Current Intent Card — 진행 중 민원 */}
+        {intent && intent.is_active && (
+          <button
+            onClick={() => navigate("/visa")}
+            className="w-full rounded-3xl p-4 text-left active:scale-[0.98] transition-transform"
+            style={{
+              backgroundColor: "var(--color-surface-primary)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: "rgba(0,122,255,0.08)" }}
+              >
+                <ClipboardList size={20} style={{ color: "var(--color-action-primary)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-[15px] leading-[20px]"
+                  style={{ fontWeight: 600, color: "var(--color-text-primary)" }}
+                >
+                  {t("home:currentIntent.title", { defaultValue: "Current application" })}
+                </p>
+                <p
+                  className="text-[12px] leading-[16px]"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {intent.visa_type} · {intent.civil_type === "extension"
+                    ? t("visa:mission.extend", { defaultValue: "Extend my stay" })
+                    : intent.civil_type === "status_change"
+                      ? t("visa:mission.change", { defaultValue: "Change my status" })
+                      : intent.civil_type
+                  }
+                </p>
+              </div>
+              <ChevronRight size={18} style={{ color: "var(--color-text-tertiary)" }} />
+            </div>
+
+            {/* Progress bar */}
+            <div className="flex items-center gap-3">
+              <div
+                className="flex-1 h-2 rounded-full overflow-hidden"
+                style={{ backgroundColor: "var(--color-surface-secondary)" }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${intent.readiness_score ?? 0}%`,
+                    backgroundColor: (intent.readiness_score ?? 0) === 100
+                      ? "var(--color-action-success)"
+                      : "var(--color-action-primary)",
+                  }}
+                />
+              </div>
+              <span
+                className="text-[13px] leading-[18px] flex-shrink-0"
+                style={{
+                  fontWeight: 700,
+                  color: (intent.readiness_score ?? 0) === 100
+                    ? "var(--color-action-success)"
+                    : "var(--color-action-primary)",
+                }}
+              >
+                {intent.readiness_score ?? 0}%
+              </span>
+            </div>
+
+            {/* D-Day (if available) */}
+            {dDay !== null && (
+              <p
+                className="text-[12px] leading-[16px] mt-2"
+                style={{ color: dDayColor, fontWeight: 500 }}
+              >
+                {t("home:currentIntent.dday", { days: dDay, defaultValue: `D-${dDay}` })}
+              </p>
+            )}
+          </button>
+        )}
 
         {/* Urgent Alert (D-Day ≤ 30) */}
         {showUrgent && (
@@ -390,7 +468,7 @@ export function Home() {
           </div>
         </button>
 
-        {/* Recent Activity — ★ FIX: "View all" onClick 연결 */}
+        {/* Recent Activity */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[17px] leading-[22px]" style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>
@@ -452,13 +530,12 @@ export function Home() {
           )}
         </div>
 
-        {/* ★ NEW: Premium Subscription Widget — 기능 하이라이트 */}
+        {/* Premium Subscription Widget */}
         {!isPremium && (
           <div
             className="rounded-3xl overflow-hidden"
             style={{ boxShadow: "0 4px 24px rgba(0,122,255,0.12)" }}
           >
-            {/* 헤더 — 그라데이션 */}
             <div
               className="px-5 pt-5 pb-4"
               style={{
@@ -480,7 +557,6 @@ export function Home() {
               </p>
             </div>
 
-            {/* 기능 목록 — 화이트 배경 */}
             <div className="px-5 py-4 space-y-3" style={{ backgroundColor: "var(--color-surface-primary)" }}>
               {[
                 { icon: Shield, label: t("home:premium_feature_scanner"), color: "var(--color-action-success)" },
@@ -504,7 +580,6 @@ export function Home() {
                 );
               })}
 
-              {/* CTA */}
               <Link
                 to="/paywall"
                 className="block w-full rounded-2xl py-3.5 text-center mt-2 active:scale-[0.98] transition-transform"

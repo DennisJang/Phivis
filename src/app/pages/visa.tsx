@@ -1,10 +1,12 @@
 /**
- * visa.tsx — Phase 3-C (Accordion UX + VisaIntent 통합)
+ * visa.tsx — Phase 4 Sprint 2 (5-Layer Architecture UI 재조립)
  *
- * VisaIntent 변경사항:
- * - useVisaIntentStore import + hydrate 연결
- * - civilType 변경 시 intent 업데이트
- * - DocumentPrep 업로드 후 intent score refresh
+ * Sprint 2 변경사항:
+ * - MissionEntry 추가 (최상단, Intent 기반 진입)
+ * - ReadinessBar 추가 (MissionEntry 바로 아래)
+ * - CelebrationModal 추가 (readiness 100% 시 한 번만)
+ * - DocumentPrep에 intentId prop 전달 (Sprint 1 이벤트 로깅)
+ * - SubmissionGuide에 intentId prop 전달
  * - 기존 모든 비즈니스 로직 100% 동결
  *
  * Dennis 규칙:
@@ -16,7 +18,7 @@
  * #35 급여 계산기 면책 3중 구조 필수
  */
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bell, Target, ClipboardCheck, GraduationCap, FileCheck,
@@ -40,6 +42,11 @@ import { DocumentGuide } from "../components/visa/DocumentGuide";
 import { LawyerMatchCTA } from "../components/visa/LawyerMatchCTA";
 import { LiabilitySheet } from "../components/visa/LiabilitySheet";
 import { AccordionCard } from "../components/visa/AccordionCard";
+
+// ★ Sprint 2: New components
+import { MissionEntry } from "../components/visa/MissionEntry";
+import { ReadinessBar } from "../components/visa/ReadinessBar";
+import { CelebrationModal } from "../components/visa/CelebrationModal";
 
 // 출입국관리사무소 팩스번호 (서울남부 기본값)
 const IMMIGRATION_FAX_NUMBER = "02-2650-6399";
@@ -87,6 +94,10 @@ export function Visa() {
   // ★ Phase 3-C: Accordion state — 한 번에 1개만 열림
   const [openSection, setOpenSection] = useState<string | null>(null);
 
+  // ★ Sprint 2: Celebration modal state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const prevScoreRef = useRef<number | null>(null);
+
   const handleToggle = (id: string) => {
     setOpenSection((prev) => (prev === id ? null : id));
   };
@@ -104,11 +115,21 @@ export function Visa() {
 
   // ★ VisaIntent: 유저의 비자 정보가 로드되면 활성 intent 없으면 자동 생성
   useEffect(() => {
-  if (!user?.id || !userProfile?.visa_type) return;
-  if (intent !== null) return;
-  if (intentLoading) return;
-  createIntent(user.id, userProfile.visa_type as string, "extension");
+    if (!user?.id || !userProfile?.visa_type) return;
+    if (intent !== null) return;
+    if (intentLoading) return;
+    createIntent(user.id, userProfile.visa_type as string, "extension");
   }, [user?.id, userProfile?.visa_type, intent, intentLoading, createIntent]);
+
+  // ★ Sprint 2: Celebration trigger — score가 100이 되는 순간 한 번만
+  useEffect(() => {
+    if (!intent) return;
+    const currentScore = intent.readiness_score ?? 0;
+    if (prevScoreRef.current !== null && prevScoreRef.current < 100 && currentScore === 100) {
+      setShowCelebration(true);
+    }
+    prevScoreRef.current = currentScore;
+  }, [intent?.readiness_score]);
 
   // ★ civilType 변경 핸들러 (DocumentPrep + SubmissionGuide + VisaIntent 동기화)
   const handleCivilTypeChange = useCallback((ct: string) => {
@@ -117,6 +138,23 @@ export function Visa() {
       setIntentCivilType(user.id, ct);
     }
   }, [user?.id, setIntentCivilType]);
+
+  // ★ Sprint 2: MissionEntry 핸들러
+  const handleMissionSelect = useCallback((ct: string) => {
+    if (!user?.id || !userProfile?.visa_type) return;
+    setCivilType(ct);
+    createIntent(user.id, userProfile.visa_type as string, ct);
+    // 서류 준비 섹션 자동 펼침
+    setOpenSection("doc-prep");
+  }, [user?.id, userProfile?.visa_type, createIntent]);
+
+  const handleScoreClick = useCallback(() => {
+    setOpenSection("kpoint");
+  }, []);
+
+  const handleViewGuide = useCallback(() => {
+    setOpenSection("submission");
+  }, []);
 
   // --- 동적 데이터 ---
   const kiipStage = visaTracker?.kiip_stage ?? 0;
@@ -208,7 +246,7 @@ export function Visa() {
         style={{
           backgroundColor: "var(--color-surface-primary)",
           borderBottom: "1px solid var(--color-border-default)",
-        }}  
+        }}
       >
         <div className="flex items-center justify-between px-4 py-4">
           <h1
@@ -233,15 +271,17 @@ export function Visa() {
           </button>
         </div>
 
-        {/* ★ Phase 3-C: D-Day 긴급 배너 */}
-        {dDay !== null && dDay <= 30 && (
+        {/* ★ D-Day 긴급 배너 — 3단계 긴급도 (Layer 4) */}
+        {dDay !== null && dDay <= 90 && (
           <div
             className="mx-4 mb-3 px-4 py-2.5 rounded-2xl flex items-center gap-2"
             style={{
               backgroundColor:
-                dDay <= 7
+                dDay <= 30
                   ? "rgba(255,59,48,0.1)"
-                  : "rgba(255,149,0,0.1)",
+                  : dDay <= 89
+                    ? "rgba(255,149,0,0.1)"
+                    : "rgba(0,122,255,0.08)",
             }}
           >
             <span
@@ -249,22 +289,42 @@ export function Visa() {
               style={{
                 fontWeight: 600,
                 color:
-                  dDay <= 7
+                  dDay <= 30
                     ? "var(--color-action-error)"
-                    : "var(--color-action-warning)",
+                    : dDay <= 89
+                      ? "var(--color-action-warning)"
+                      : "var(--color-action-primary)",
               }}
             >
-              ⚠️{" "}
-              {t("visa:dday_urgent", {
-                days: dDay,
-                defaultValue: `Visa expires in ${dDay} days`,
-              })}
+              {dDay <= 30
+                ? `⚠️ ${t("visa:dday.urgent", { days: dDay, remaining: (intent?.documents_required ?? 0) - (intent?.documents_ready ?? 0), defaultValue: `D-${dDay}. Documents incomplete` })}`
+                : dDay <= 89
+                  ? `${t("visa:dday.warning", { days: dDay, defaultValue: `${dDay} days left — Start preparing your documents` })}`
+                  : `${t("visa:dday.info", { days: dDay, defaultValue: `${dDay} days until visa expires` })}`
+              }
             </span>
           </div>
         )}
       </header>
 
       <div className="px-4 py-6 space-y-3">
+        {/* ★ Sprint 2: Mission Entry — "What do you need?" */}
+        <MissionEntry
+          currentIntent={intent}
+          onSelect={handleMissionSelect}
+          onScoreClick={handleScoreClick}
+        />
+
+        {/* ★ Sprint 2: Readiness Bar — intent가 있고 collecting 상태일 때 */}
+        {intent && intent.status !== "created" && (
+          <ReadinessBar
+            score={intent.readiness_score ?? 0}
+            totalDocs={intent.documents_required ?? 0}
+            uploadedDocs={intent.documents_ready ?? 0}
+            onViewGuide={handleViewGuide}
+          />
+        )}
+
         {/* ── 1. K-point Simulator ── */}
         <AccordionCard
           id="kpoint"
@@ -372,6 +432,7 @@ export function Visa() {
             userId={user?.id}
             onUpgrade={() => navigate("/paywall")}
             onCivilTypeChange={handleCivilTypeChange}
+            intentId={intent?.id ?? null}
           />
         </AccordionCard>
 
@@ -394,6 +455,7 @@ export function Visa() {
             completeness={
               isProfileComplete ? 60 : profileReadiness * 15
             }
+            intentId={intent?.id ?? null}
           />
         </AccordionCard>
 
@@ -478,6 +540,13 @@ export function Visa() {
           <WageCalculator />
         </AccordionCard>
       </div>
+
+      {/* ★ Sprint 2: Celebration Modal */}
+      <CelebrationModal
+        isOpen={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        onViewGuide={handleViewGuide}
+      />
 
       {/* Liability Sheet (면책 모달) — Accordion 바깥 */}
       <LiabilitySheet
