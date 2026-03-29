@@ -107,13 +107,20 @@ export function Visa() {
     }
   }, [user?.id, visaTracker, hydrate, hydrateIntent]);
 
-  // Auto-create intent
-  useEffect(() => {
-    if (!user?.id || !userProfile?.visa_type) return;
-    if (intent !== null) return;
-    if (intentLoading) return;
-    createIntent(user.id, userProfile.visa_type as string, "extension");
-  }, [user?.id, userProfile?.visa_type, intent, intentLoading, createIntent]);
+  // Auto-create intent — 동의 미확인 시 동의 시트 먼저
+useEffect(() => {
+  if (!user?.id || !userProfile?.visa_type) return;
+  if (intent !== null) return;
+  if (intentLoading) return;
+  
+  // PIPA: 동의 미확인 시 동의 시트 표시
+  if (userProfile?.event_consent === null || userProfile?.event_consent === undefined) {
+    setShowConsent(true);
+    return;
+  }
+  
+  createIntent(user.id, userProfile.visa_type as string, "extension");
+  }, [user?.id, userProfile?.visa_type, userProfile?.event_consent, intent, intentLoading, createIntent]);
 
   // ★ Sprint 2: Celebration trigger
   useEffect(() => {
