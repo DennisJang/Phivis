@@ -42,6 +42,8 @@ import { AccordionCard } from "../components/visa/AccordionCard";
 import { MissionEntry } from "../components/visa/MissionEntry";
 import { ReadinessBar } from "../components/visa/ReadinessBar";
 import { CelebrationModal } from "../components/visa/CelebrationModal";
+import { EventConsentSheet } from "../components/visa/EventConsentSheet";
+import { setEventConsent } from "../../lib/eventLog";
 
 const IMMIGRATION_FAX_NUMBER = "02-2650-6399";
 
@@ -84,7 +86,9 @@ export function Visa() {
 
   // ★ Sprint 2: Celebration modal
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
   const prevScoreRef = useRef<number | null>(null);
+  
 
   // ★ Sprint 3: 상태 전이 토스트 감지용
   const prevStatusRef = useRef<string | null>(null);
@@ -169,12 +173,50 @@ export function Visa() {
   }, [user?.id, setIntentCivilType]);
 
   // Mission select
-  const handleMissionSelect = useCallback((ct: string) => {
-    if (!user?.id || !userProfile?.visa_type) return;
+  const pendingCivilTypeRef = useRef<string | null>(null);
+
+const handleMissionSelect = useCallback((ct: string) => {
+  if (!user?.id || !userProfile?.visa_type) return;
+
+  // PIPA: 동의 미확인 시 동의 시트 먼저 표시
+  if (userProfile?.event_consent === null || userProfile?.event_consent === undefined) {
+    pendingCivilTypeRef.current = ct;
+    setShowConsent(true);
+    return;
+  }
+
+  setCivilType(ct);
+  createIntent(user.id, userProfile.visa_type as string, ct);
+  setOpenSection("doc-prep");
+}, [user?.id, userProfile, createIntent]);
+
+const handleConsentAccept = useCallback(async () => {
+  await setEventConsent(true);
+  setShowConsent(false);
+
+  // 동의 후 원래 의도한 mission 실행
+  const ct = pendingCivilTypeRef.current ?? "extension";
+  if (user?.id && userProfile?.visa_type) {
     setCivilType(ct);
     createIntent(user.id, userProfile.visa_type as string, ct);
     setOpenSection("doc-prep");
-  }, [user?.id, userProfile?.visa_type, createIntent]);
+  }
+  pendingCivilTypeRef.current = null;
+}, [user?.id, userProfile?.visa_type, createIntent]);
+
+const handleConsentDecline = useCallback(async () => {
+  await setEventConsent(false);
+  setShowConsent(false);
+
+  // 거부해도 앱은 정상 작동 (PIPA 제16조 제3항)
+  const ct = pendingCivilTypeRef.current ?? "extension";
+  if (user?.id && userProfile?.visa_type) {
+    setCivilType(ct);
+    createIntent(user.id, userProfile.visa_type as string, ct);
+    setOpenSection("doc-prep");
+  }
+  pendingCivilTypeRef.current = null;
+}, [user?.id, userProfile?.visa_type, createIntent]);
 
   const handleScoreClick = useCallback(() => {
     setOpenSection("kpoint");
@@ -495,6 +537,11 @@ export function Visa() {
         isOpen={showCelebration}
         onClose={() => setShowCelebration(false)}
         onViewGuide={handleViewGuide}
+      />
+      <EventConsentSheet
+        isOpen={showConsent}
+        onAccept={handleConsentAccept}
+        onDecline={handleConsentDecline}
       />
 
       {/* Liability Sheet */}

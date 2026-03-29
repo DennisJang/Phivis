@@ -39,6 +39,7 @@ export interface UserProfile {
   occupation: string | null           // 직업
   email: string | null                // 전자우편
   bank_account: string | null         // 반환용 계좌번호
+  event_consent: boolean | null        // PIPA Art.15 이벤트 수집 동의 (null=미확인)
 
   // --- 번역 원문 + 통화 ---
   address_home_original: string | null       // 본국주소 원문 (모국어)

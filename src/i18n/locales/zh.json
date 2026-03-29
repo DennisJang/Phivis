@@ -1,5 +1,14 @@
 {
   "common": {
+    "consent": {
+      "title": "数据收集通知",
+      "description": "Settle收集使用数据（文件准备进度、提交指南浏览）以改善服务。不收集个人信息（姓名、登记号码）。",
+      "detail": "收集项目：准备进度、指南浏览、完成时间。不收集：姓名、登记号码、联系方式。",
+      "checkbox": "我同意收集使用数据",
+      "accept": "同意",
+      "decline": "拒绝",
+      "update": "您可以随时在 MY > 设置 中更改"
+    },
     "tab_home": "首页",
     "tab_visa": "签证",
     "tab_remit": "汇款",
@@ -16,6 +25,15 @@
     "disclaimer_fax": "仅为自动填写工具，提交责任由本人承担。",
     "disclaimer_ai": "仅供AI参考，不构成法律建议。",
     "disclaimer_visa_score": "仅供参考，无法律效力。"
+  },
+  "notification": {
+    "toast": {
+      "collecting": "正在收集文件",
+      "ready": "文件准备完毕！请查看提交指南",
+      "submitted": "已提交！",
+      "completed": "申请完成 🎉",
+      "documentUploaded": "文件已上传"
+    }
   },
   "home": {
     "greeting": "你好，{{name}}！",
@@ -82,6 +100,34 @@
     "status_completed": "已完成"
   },
   "visa": {
+    "mission": {
+      "title": "您需要什么？",
+      "extend": "延长居留",
+      "change": "变更资格",
+      "score": "查看分数",
+      "current": "进行中: {{visaType}} {{civilType}} ({{score}}%)"
+    },
+    "readiness": {
+      "title": "文件准备度",
+      "progress": "{{uploaded}}/{{total}} 文件已完成",
+      "complete": "所有文件已准备完毕！",
+      "nextStep": "下一步: 查看提交指南"
+    },
+    "celebration": {
+      "title": "文件准备完毕！🎉",
+      "subtitle": "下一步: 查看提交指南",
+      "viewGuide": "查看提交指南"
+    },
+    "dday": {
+      "info": "签证到期还有{{days}}天",
+      "warning": "还有{{days}}天 — 请开始准备文件",
+      "urgent": "D-{{days}}. {{remaining}}份文件未完成",
+      "expired": "您的签证已过期"
+    },
+    "submission_guide": {
+      "title": "提交指南"
+    },
+    "doc_guide_title": "AI文件指南",
     "title": "签证",
     "notifications": "通知",
     "services_title": "服务",

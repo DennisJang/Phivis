@@ -1,5 +1,14 @@
 {
   "common": {
+    "consent": {
+      "title": "Thông báo thu thập dữ liệu",
+      "description": "Settle thu thập dữ liệu sử dụng (tiến độ chuẩn bị hồ sơ, lượt xem hướng dẫn) để cải thiện dịch vụ. Không thu thập thông tin cá nhân (tên, số đăng ký).",
+      "detail": "Thu thập: tiến độ chuẩn bị, lượt xem hướng dẫn, thời gian hoàn thành. Không thu thập: tên, số đăng ký, thông tin liên hệ.",
+      "checkbox": "Tôi đồng ý thu thập dữ liệu sử dụng",
+      "accept": "Đồng ý",
+      "decline": "Từ chối",
+      "update": "Bạn có thể thay đổi bất cứ lúc nào trong MY > Cài đặt"
+    },
     "tab_home": "Home",
     "tab_visa": "Visa",
     "tab_remit": "Chuyển tiền",
@@ -21,6 +30,15 @@
     "premium_feature_submit": "Nộp hồ sơ tự động",
     "premium_feature_lawyer": "Ưu tiên kết nối chuyên gia"
   },
+  "notification": {
+  "toast": {
+    "collecting": "Đang thu thập tài liệu",
+    "ready": "Hồ sơ đã sẵn sàng! Xem hướng dẫn nộp",
+    "submitted": "Đã nộp!",
+    "completed": "Hoàn tất đơn 🎉",
+    "documentUploaded": "Tài liệu đã được tải lên"
+  }
+},
   "home": {
     "greeting": "Xin chào, {{name}}!",
     "subtitle": "Đây là tổng quan của bạn",
@@ -86,6 +104,34 @@
     "status_completed": "Hoàn thành"
   },
   "visa": {
+    "mission": {
+      "title": "Bạn cần gì?",
+      "extend": "Gia hạn lưu trú",
+      "change": "Thay đổi tư cách",
+      "score": "Kiểm tra điểm",
+      "current": "Đang tiến hành: {{visaType}} {{civilType}} ({{score}}%)"
+    },
+    "readiness": {
+      "title": "Độ sẵn sàng hồ sơ",
+      "progress": "{{uploaded}}/{{total}} tài liệu hoàn tất",
+      "complete": "Tất cả tài liệu đã sẵn sàng!",
+      "nextStep": "Tiếp theo: Xem hướng dẫn nộp"
+    },
+    "celebration": {
+      "title": "Hồ sơ đã sẵn sàng! 🎉",
+      "subtitle": "Bước tiếp theo: Xem hướng dẫn nộp hồ sơ",
+      "viewGuide": "Xem hướng dẫn nộp"
+    },
+    "dday": {
+      "info": "Còn {{days}} ngày hết hạn visa",
+      "warning": "Còn {{days}} ngày — Bắt đầu chuẩn bị hồ sơ",
+      "urgent": "D-{{days}}. {{remaining}} tài liệu chưa hoàn tất",
+      "expired": "Visa của bạn đã hết hạn"
+    },
+    "submission_guide": {
+      "title": "Hướng dẫn nộp"
+    },
+    "doc_guide_title": "Hướng dẫn tài liệu AI",
     "title": "Visa",
     "notifications": "Thông báo",
     "services_title": "Dịch vụ",

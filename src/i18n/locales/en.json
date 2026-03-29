@@ -1,5 +1,14 @@
 {
   "common": {
+    "consent": {
+        "title": "Data collection notice",
+        "description": "Settle collects usage data (document preparation progress, submission guide views) to improve the service. No personal information (name, registration number) is collected.",
+        "detail": "Collected: preparation progress, guide views, completion time. Not collected: name, registration number, contact info.",
+        "checkbox": "I agree to usage data collection",
+        "accept": "Accept",
+        "decline": "Decline",
+        "update": "You can change this anytime in MY > Settings"
+      },
     "tab_home": "Home",
     "tab_visa": "Visa",
     "tab_remit": "Remit",
@@ -17,6 +26,15 @@
     "disclaimer_ai": "AI reference only. Not legal advice.",
     "disclaimer_visa_score": "For reference only. No legal effect."
   },
+  "notification": {
+  "toast": {
+    "collecting": "Collecting documents",
+    "ready": "Documents ready! Check the submission guide",
+    "submitted": "Submitted!",
+    "completed": "Application complete 🎉",
+    "documentUploaded": "Document uploaded"
+  }
+},
   "home": {
     "greeting": "Hello, {{name}}!",
     "subtitle": "Here's your overview",
@@ -224,8 +242,36 @@
     "liability_checkbox": "Auto-fill tool only. Submission is your responsibility.",
     "liability_checkbox_en": "You are responsible for the accuracy of submitted information.",
     "liability_submitting": "Submitting...",
-    "liability_submit": "Submit documents"
-  },
+    "liability_submit": "Submit documents",
+    "mission": {
+      "title": "What do you need?",
+      "extend": "Extend my stay",
+      "change": "Change my status",
+      "score": "Check my score",
+      "current": "In progress: {{visaType}} {{civilType}} ({{score}}%)"
+    },
+    "readiness": {
+      "title": "Document readiness",
+      "progress": "{{uploaded}}/{{total}} documents ready",
+      "complete": "All documents ready!",
+      "nextStep": "Next: Check submission guide"
+    },
+    "celebration": {
+      "title": "Documents ready! 🎉",
+      "subtitle": "Next step: Check the submission guide",
+      "viewGuide": "View submission guide"
+    },
+    "dday": {
+      "info": "{{days}} days until visa expires",
+      "warning": "{{days}} days left — Start preparing your documents",
+      "urgent": "D-{{days}}. {{remaining}} documents incomplete",
+      "expired": "Your visa has expired"
+    },
+    "submission_guide": {
+      "title": "Submission Guide"
+    },
+    "doc_guide_title": "AI Document Guide"
+      },
   "remit": {
     "title": "Remit",
     "show_more_providers": "More providers ({{count}})",

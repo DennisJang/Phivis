@@ -1,32 +1,26 @@
 /**
- * eventLog.ts — Layer 2 Event Log 유틸
+ * eventLog.ts — 이벤트 기록 유틸 (Phase 4 Layer 2)
  *
- * 역할: settle_events 테이블에 유저 행동을 자동 기록
- * 원칙: Passive Collection (Waze 패턴). 유저 마찰 0.
- *       fire-and-forget — 실패해도 UX에 영향 없음.
- *       PII 금지 — EventData 타입에 이름/등록번호 필드 자체가 없음.
+ * 역할: settle_events 테이블에 유저 행동 자동 기록
+ * 원칙: fire-and-forget. 실패해도 UX 무영향. PII 미수집.
  *
- * Stage 4 무기: 이 데이터가 2년 후 "Settle 경유 반려율 2%" 근거가 된다.
- *
- * 5가지 MVP 이벤트:
- *   1. intent_created     — 민원 시작
- *   2. document_uploaded  — 서류 업로드
- *   3. readiness_changed  — 준비도 변경
- *   4. guide_viewed       — 제출 가이드 조회
- *   5. intent_completed   — 민원 완료
+ * Phase 4 수정 (PIPA 동의):
+ *   - logEvent 호출 시 user_profiles.event_consent 체크
+ *   - 동의 없으면 조용히 skip (앱 기능에 영향 없음)
+ *   - 동의 상태는 메모리 캐시 (세션 당 1회 DB 조회)
  */
 
 import { supabase } from "./supabase";
 
-export type EventType =
+type EventType =
   | "intent_created"
   | "document_uploaded"
   | "readiness_changed"
   | "guide_viewed"
   | "intent_completed";
 
-export interface EventData {
-  // intent_created / intent_completed
+interface EventData {
+  // intent_created
   visa_type?: string;
   civil_type?: string;
   // document_uploaded
@@ -43,9 +37,64 @@ export interface EventData {
   total_documents?: number;
 }
 
+// ─── Consent cache ───
+// 세션 당 1회만 DB 조회. null = 미확인, true/false = 확인 완료.
+let consentCache: boolean | null = null;
+
+async function hasEventConsent(): Promise<boolean> {
+  // 캐시 히트
+  if (consentCache !== null) return consentCache;
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("event_consent")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    consentCache = data?.event_consent === true;
+    return consentCache;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * 이벤트 기록. fire-and-forget.
- * 실패 시 console.warn만 출력. UX 차단 없음.
+ * 동의 상태 갱신 시 캐시 무효화.
+ * EventConsentSheet에서 동의/거부 후 호출.
+ */
+export function invalidateConsentCache(): void {
+  consentCache = null;
+}
+
+/**
+ * 동의 상태를 DB에 저장 + 캐시 갱신.
+ */
+export async function setEventConsent(consent: boolean): Promise<void> {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from("user_profiles")
+      .update({ event_consent: consent })
+      .eq("user_id", user.id);
+
+    consentCache = consent;
+  } catch (e) {
+    console.warn("[EventLog] Failed to set consent:", e);
+  }
+}
+
+/**
+ * 이벤트 기록. 동의 없으면 조용히 skip.
  */
 export async function logEvent(
   intentId: string | null,
@@ -53,10 +102,14 @@ export async function logEvent(
   eventData: EventData = {}
 ): Promise<void> {
   try {
+    // PIPA 동의 체크
+    const consent = await hasEventConsent();
+    if (!consent) return;
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return; // 비로그인 시 무시
+    if (!user) return;
 
     await supabase.from("settle_events").insert({
       user_id: user.id,
