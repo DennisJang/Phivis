@@ -1,6 +1,8 @@
 import { motion } from "motion/react";
 import { Logo } from "./logo";
 
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
 const float = (delay: number, duration = 3.5) => ({
   y: [0, -6, 0, 6, 0],
   transition: {
@@ -35,16 +37,12 @@ export function Step1Illustration() {
 }
 
 /* ══════════════════════════════════════════
-   STEP 2: Nationality — Globe ITSELF rotates + detailed continents + red pins
+   STEP 2: Nationality — Lottie 3D Globe + red pins
    ══════════════════════════════════════════ */
 export function Step2Illustration() {
   return (
     <div className="relative size-full flex items-center justify-center overflow-hidden">
       <style>{`
-        @keyframes globeRotate {
-          from { transform: rotateY(0deg); }
-          to { transform: rotateY(360deg); }
-        }
         @keyframes pinSequence {
           0%, 5% { opacity: 0; transform: scale(0); }
           12%, 65% { opacity: 1; transform: scale(1); }
@@ -52,42 +50,33 @@ export function Step2Illustration() {
         }
       `}</style>
 
-      {/* Map surface */}
-      <div style={{ position: "absolute", width: 160, height: 80, bottom: "calc(50% - 65px)", background: "linear-gradient(135deg, rgba(147,197,253,0.4) 0%, rgba(191,219,254,0.2) 100%)", borderRadius: 8, transform: "perspective(300px) rotateX(50deg)", boxShadow: "0 8px 24px rgba(59,130,246,0.08)" }} />
+      {/* Lottie Globe */}
+      <motion.div animate={float(0, 5)} style={{ position: "relative", zIndex: 2, width: 120, height: 120 }}>
+        <DotLottieReact
+          src="https://lottie.host/c532eac6-df24-47d7-8f7f-95569ac16ec2/hQfbrG0Rk2.lottie"
+          loop
+          autoplay
+          style={{ width: 120, height: 120 }}
+        />
 
-      {/* Globe — ENTIRE sphere rotates, highlight counter-rotates to stay fixed */}
-      <motion.div animate={float(0, 5)} style={{ position: "relative", zIndex: 2 }}>
-        <div style={{
-          width: 100, height: 100, borderRadius: 50,
-          position: "relative", overflow: "hidden",
-          animation: "globeRotate 25s linear infinite",
-          background: "radial-gradient(circle at 35% 35%, #93c5fd 0%, #3b82f6 40%, #2563eb 70%, #1d4ed8 100%)",
-          boxShadow: "inset -10px -6px 20px rgba(0,0,0,0.15), inset 6px 6px 16px rgba(255,255,255,0.25), 0 10px 28px rgba(59,130,246,0.22)",
-        }}>
-          {/* Continents — rotate WITH globe */}
-          <div style={{ position: "absolute", top: 16, left: 48, width: 30, height: 34, borderRadius: "10px 14px 8px 12px", background: "rgba(34,197,94,0.55)", boxShadow: "inset 0 1px 3px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.05)" }} />
-          <div style={{ position: "absolute", top: 36, left: 38, width: 16, height: 24, borderRadius: "4px 8px 12px 6px", background: "rgba(34,197,94,0.5)" }} />
-          <div style={{ position: "absolute", top: 52, left: 56, width: 18, height: 10, borderRadius: 4, background: "rgba(34,197,94,0.45)" }} />
-          <div style={{ position: "absolute", top: 56, left: 66, width: 8, height: 6, borderRadius: 3, background: "rgba(34,197,94,0.4)" }} />
-          <div style={{ position: "absolute", top: 14, left: 18, width: 14, height: 20, borderRadius: "6px 8px 4px 6px", background: "rgba(34,197,94,0.5)", boxShadow: "inset 0 1px 2px rgba(255,255,255,0.15)" }} />
-          <div style={{ position: "absolute", top: 30, left: 16, width: 16, height: 30, borderRadius: "6px 10px 12px 8px", background: "rgba(34,197,94,0.45)" }} />
-          <div style={{ position: "absolute", top: 10, left: -10, width: 18, height: 22, borderRadius: "8px 6px 4px 10px", background: "rgba(34,197,94,0.4)" }} />
-          <div style={{ position: "absolute", top: 28, left: -14, width: 14, height: 30, borderRadius: "6px 8px 10px 6px", background: "rgba(34,197,94,0.38)" }} />
-          <div style={{ position: "absolute", top: 62, left: 64, width: 18, height: 14, borderRadius: "8px 6px 10px 4px", background: "rgba(34,197,94,0.4)" }} />
-
-          {/* Specular highlight — counter-rotates to stay visually fixed */}
-          <div style={{ position: "absolute", top: 8, left: 14, width: 34, height: 34, borderRadius: 17, background: "radial-gradient(circle, rgba(255,255,255,0.45) 0%, transparent 70%)", animation: "globeRotate 25s linear infinite reverse" }} />
-        </div>
-
-        {/* Red pins */}
+        {/* Red pins around globe */}
         {[
-          { top: -6, left: 12 },
-          { top: 8, left: 78 },
-          { top: 42, left: -8 },
-          { top: 60, left: 82 },
-          { top: 28, left: 92 },
+          { top: -4, left: 14 },
+          { top: 10, left: 96 },
+          { top: 50, left: -6 },
+          { top: 70, left: 100 },
+          { top: 32, left: 108 },
         ].map((pos, i) => (
-          <div key={i} style={{ position: "absolute", ...pos, width: 14, height: 18, animation: `pinSequence 6s ease-in-out ${i * 0.4}s infinite` }}>
+          <div
+            key={i}
+            style={{
+              position: "absolute",
+              ...pos,
+              width: 14,
+              height: 18,
+              animation: `pinSequence 6s ease-in-out ${i * 0.4}s infinite`,
+            }}
+          >
             <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
               <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 11 7 11s7-5.75 7-11c0-3.87-3.13-7-7-7Z" fill="#EF4444" />
               <circle cx="7" cy="7" r="3" fill="#fff" />
