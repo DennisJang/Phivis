@@ -170,63 +170,102 @@ export function Step3Illustration() {
 }
 
 /* ══════════════════════════════════════════
-   STEP 4: Language — Document translation Before → After
-   No center arrow. Just before (faded) and after (clear) side by side.
+   STEP 4: Language — Lottie translation + Before/After mini docs
+   Left: HiKorea-style complex Korean form (simplified, Kurzgesagt-minimal)
+   Center: Lottie translation animation
+   Right: Clean translated version
    ══════════════════════════════════════════ */
 export function Step4Illustration() {
   return (
-    <div className="relative size-full flex items-center justify-center" style={{ gap: 16 }}>
-      {/* Korean document — faded, complex */}
-      <motion.div animate={float(0, 4)} style={{
-        width: 72, height: 90, borderRadius: 10,
-        background: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.3)",
-        padding: 8, opacity: 0.5, transform: "rotate(-5deg)",
-        display: "flex", flexDirection: "column", gap: 4,
-        boxShadow: "0 4px 12px rgba(139,92,246,0.08)",
-      }}>
-        {[22, 18, 20, 16, 22, 14, 20, 18, 16, 22].map((w, i) => (
-          <div key={i} style={{ width: w, height: 2, borderRadius: 1, background: "rgba(107,114,148,0.3)" }} />
-        ))}
-      </motion.div>
-
-      {/* Translated document — clear */}
-      <motion.div animate={float(0.3, 3.8)} style={{
-        width: 72, height: 90, borderRadius: 10,
-        background: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.5)",
-        padding: 8, transform: "rotate(5deg)",
-        display: "flex", flexDirection: "column", gap: 4,
-        boxShadow: "0 4px 16px rgba(139,92,246,0.1)",
-      }}>
-        <div className="flex gap-1" style={{ marginBottom: 2 }}>
-          <span style={{ fontSize: 8 }}>🇰🇷</span>
-          <span style={{ fontSize: 8 }}>🇺🇸</span>
-          <span style={{ fontSize: 8 }}>🇻🇳</span>
+    <div className="relative size-full flex items-center justify-center" style={{ gap: 6 }}>
+      {/* LEFT — "HiKorea" complex form (simplified representation) */}
+      <motion.div
+        animate={float(0, 4)}
+        style={{
+          width: 64,
+          height: 84,
+          borderRadius: 8,
+          background: "rgba(255,255,255,0.45)",
+          border: "1px solid rgba(200,200,210,0.4)",
+          padding: 6,
+          opacity: 0.55,
+          transform: "rotate(-3deg)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Fake header bar */}
+        <div style={{ width: "100%", height: 8, borderRadius: 2, background: "rgba(59,130,246,0.2)" }} />
+        {/* Dense Korean text lines — representing HiKorea complexity */}
+        <div style={{ fontSize: 4, color: "rgba(100,100,120,0.6)", fontFamily: "sans-serif", lineHeight: 1.6, letterSpacing: "-0.5px" }}>
+          체류자격변경허가<br />
+          신청서류안내<br />
+          구비서류목록<br />
+          ───────<br />
+          여권사본·사진<br />
+          체류자격변경<br />
+          신청서·수수료<br />
+          고용계약서류<br />
+          ───────<br />
+          출입국관리법
         </div>
-        {[24, 20, 22, 18, 24, 16, 22, 20].map((w, i) => (
-          <div key={i} style={{ width: w, height: 2, borderRadius: 1, background: "rgba(99,91,255,0.25)" }} />
-        ))}
       </motion.div>
 
-      {/* Floating speech bubbles */}
-      {[
-        { text: "안녕", top: "12%", left: "8%", delay: 0, size: 11 },
-        { text: "Hello", top: "20%", right: "6%", delay: 0.5, size: 10 },
-        { text: "Xin chào", bottom: "22%", left: "5%", delay: 1, size: 10 },
-      ].map((b, i) => (
-        <motion.div key={i} animate={float(b.delay, 3.5)} style={{
-          position: "absolute",
-          top: (b as Record<string, unknown>).top as string | undefined,
-          bottom: (b as Record<string, unknown>).bottom as string | undefined,
-          left: (b as Record<string, unknown>).left as string | undefined,
-          right: (b as Record<string, unknown>).right as string | undefined,
-          background: "rgba(255,255,255,0.7)", backdropFilter: "blur(4px)",
-          padding: "4px 10px", borderRadius: 20, fontSize: b.size, fontWeight: 500,
-          color: "#6B7294", fontFamily: "Inter, sans-serif",
-          boxShadow: "0 2px 8px rgba(139,92,246,0.08)", whiteSpace: "nowrap",
-        }}>
-          {b.text}
-        </motion.div>
-      ))}
+      {/* CENTER — Lottie translation animation */}
+      <div style={{ width: 100, height: 100, flexShrink: 0 }}>
+        <DotLottieReact
+          src="https://lottie.host/388cfe99-9a49-49a0-be93-e91299d6aeeb/f66VXsRGr9.lottie"
+          loop
+          autoplay
+          style={{ width: 100, height: 100 }}
+        />
+      </div>
+
+      {/* RIGHT — Clean translated version */}
+      <motion.div
+        animate={float(0.3, 3.8)}
+        style={{
+          width: 64,
+          height: 84,
+          borderRadius: 8,
+          background: "rgba(255,255,255,0.92)",
+          border: "1px solid rgba(99,91,255,0.12)",
+          padding: 6,
+          transform: "rotate(3deg)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          boxShadow: "0 4px 12px rgba(99,91,255,0.08)",
+          overflow: "hidden",
+        }}
+      >
+        {/* Phivis header */}
+        <div className="flex items-center gap-1">
+          <div style={{ width: 8, height: 8, borderRadius: 2, background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }} />
+          <span style={{ fontSize: 4, fontWeight: 600, color: "#635BFF", fontFamily: "Inter, sans-serif" }}>Phivis</span>
+        </div>
+        {/* Language flags */}
+        <div className="flex gap-0.5">
+          <span style={{ fontSize: 6 }}>🇺🇸</span>
+          <span style={{ fontSize: 6 }}>🇻🇳</span>
+          <span style={{ fontSize: 6 }}>🇨🇳</span>
+        </div>
+        {/* Clean organized lines */}
+        {[28, 22, 26, 20, 28, 18, 24].map((w, i) => (
+          <div key={i} style={{ width: w, height: 2, borderRadius: 1, background: `rgba(99,91,255,${0.2 + (i % 2) * 0.08})` }} />
+        ))}
+        {/* Checkmarks */}
+        <div className="flex gap-1" style={{ marginTop: 2 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{ width: 8, height: 8, borderRadius: 4, background: "rgba(16,185,129,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 5, color: "#10B981" }}>✓</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }
