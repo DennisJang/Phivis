@@ -37,52 +37,18 @@ export function Step1Illustration() {
 }
 
 /* ══════════════════════════════════════════
-   STEP 2: Nationality — Lottie 3D Globe + red pins
+   STEP 2: Nationality — Lottie 3D Globe (large, no pins)
    ══════════════════════════════════════════ */
 export function Step2Illustration() {
   return (
     <div className="relative size-full flex items-center justify-center overflow-hidden">
-      <style>{`
-        @keyframes pinSequence {
-          0%, 5% { opacity: 0; transform: scale(0); }
-          12%, 65% { opacity: 1; transform: scale(1); }
-          75%, 100% { opacity: 0; transform: scale(0.7); }
-        }
-      `}</style>
-
-      {/* Lottie Globe */}
-      <motion.div animate={float(0, 5)} style={{ position: "relative", zIndex: 2, width: 120, height: 120 }}>
+      <motion.div animate={float(0, 5)} style={{ width: 240, height: 240 }}>
         <DotLottieReact
           src="https://lottie.host/c532eac6-df24-47d7-8f7f-95569ac16ec2/hQfbrG0Rk2.lottie"
           loop
           autoplay
-          style={{ width: 120, height: 120 }}
+          style={{ width: 240, height: 240 }}
         />
-
-        {/* Red pins around globe */}
-        {[
-          { top: -4, left: 14 },
-          { top: 10, left: 96 },
-          { top: 50, left: -6 },
-          { top: 70, left: 100 },
-          { top: 32, left: 108 },
-        ].map((pos, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              ...pos,
-              width: 14,
-              height: 18,
-              animation: `pinSequence 6s ease-in-out ${i * 0.4}s infinite`,
-            }}
-          >
-            <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
-              <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 11 7 11s7-5.75 7-11c0-3.87-3.13-7-7-7Z" fill="#EF4444" />
-              <circle cx="7" cy="7" r="3" fill="#fff" />
-            </svg>
-          </div>
-        ))}
       </motion.div>
     </div>
   );
