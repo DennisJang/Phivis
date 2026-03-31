@@ -170,211 +170,227 @@ export function Step3Illustration() {
 }
 
 /* ══════════════════════════════════════════
-   STEP 4: Language — 3-phase sequential animation
-   Phase 1: HiKorea scrolling complexity (왼)
-   Phase 2: Translation motion (중)
-   Phase 3: Phivis clean UI demo (오)
-   Each phase fills the area, then collapses before next.
+   STEP 4: Language — 3-phase sequential animation (12s loop)
+   Phase 1 (0~3.5s): Fast scrolling Korean docs → "Simple is Best"
+   Phase 2 (3.5~7.5s): 3 words slide-translate (KR→EN, KR→ZH, KR→VI)
+   Phase 3 (7.5~12s): Phivis UI — 3 taps, expand, check
    ══════════════════════════════════════════ */
 export function Step4Illustration() {
   return (
     <div className="relative size-full overflow-hidden">
       <style>{`
-        @keyframes phase1 {
+        @keyframes p1show {
           0%, 2% { opacity: 1; transform: scale(1); }
-          28%, 30% { opacity: 1; transform: scale(1); }
-          35% { opacity: 0; transform: scale(0.85) translateX(-40px); }
-          36%, 100% { opacity: 0; transform: scale(0.85) translateX(-40px); }
+          26% { opacity: 1; transform: scale(1); }
+          32% { opacity: 0; transform: scale(0.9) translateX(-30px); }
+          33%, 100% { opacity: 0; }
         }
-        @keyframes phase2 {
-          0%, 34% { opacity: 0; transform: scale(0.85); }
-          38% { opacity: 1; transform: scale(1); }
-          62% { opacity: 1; transform: scale(1); }
-          68% { opacity: 0; transform: scale(0.85) translateX(-40px); }
-          69%, 100% { opacity: 0; }
+        @keyframes p2show {
+          0%, 31% { opacity: 0; transform: scale(0.9); }
+          36% { opacity: 1; transform: scale(1); }
+          60% { opacity: 1; transform: scale(1); }
+          66% { opacity: 0; transform: scale(0.9) translateX(-30px); }
+          67%, 100% { opacity: 0; }
         }
-        @keyframes phase3 {
-          0%, 67% { opacity: 0; transform: scale(0.85); }
-          72% { opacity: 1; transform: scale(1); }
-          95% { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.95); }
+        @keyframes p3show {
+          0%, 65% { opacity: 0; transform: scale(0.9); }
+          70% { opacity: 1; transform: scale(1); }
+          96% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; }
         }
-        @keyframes docScroll {
+        @keyframes fastScroll {
           0% { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
+          100% { transform: translateY(-60%); }
         }
-        @keyframes strikethrough {
-          0%, 10% { width: 0; }
-          40%, 100% { width: 100%; }
+        @keyframes simpleIsBest {
+          0%, 55% { opacity: 0; transform: scale(0.9); }
+          70%, 90% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; }
         }
-        @keyframes fadeReplace {
-          0%, 40% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0; transform: scale(0.8); }
-          60%, 100% { opacity: 0; transform: scale(0.8); }
+        @keyframes wordKR {
+          0%, 5% { opacity: 0; transform: translateX(0); }
+          12% { opacity: 1; transform: translateX(0); }
+          35% { opacity: 1; transform: translateX(0); }
+          45% { opacity: 0; transform: translateX(-40px); }
+          46%, 100% { opacity: 0; }
         }
-        @keyframes fadeIn {
-          0%, 50% { opacity: 0; transform: translateY(4px); }
-          70%, 100% { opacity: 1; transform: translateY(0); }
+        @keyframes wordTranslated {
+          0%, 40% { opacity: 0; transform: translateX(40px); }
+          50% { opacity: 1; transform: translateX(0); }
+          85% { opacity: 1; transform: translateX(0); }
+          95%, 100% { opacity: 0; transform: translateX(0); }
         }
-        @keyframes tapDoc {
-          0%, 15% { transform: scale(1); background: rgba(243,243,245,1); }
-          18% { transform: scale(0.97); }
-          20%, 45% { transform: scale(1); background: rgba(99,91,255,0.06); }
-          50%, 100% { transform: scale(1); background: rgba(243,243,245,1); }
+        @keyframes cardTap {
+          0%, 5% { transform: scale(1); }
+          8% { transform: scale(0.97); }
+          10% { transform: scale(1); }
+          100% { transform: scale(1); }
         }
-        @keyframes checkAppear {
-          0%, 45% { opacity: 0; transform: scale(0); }
-          55%, 100% { opacity: 1; transform: scale(1); }
+        @keyframes cardExpand {
+          0%, 9% { max-height: 0; opacity: 0; padding: 0 8px; }
+          15%, 55% { max-height: 40px; opacity: 1; padding: 4px 8px; }
+          65%, 100% { max-height: 0; opacity: 0; padding: 0 8px; }
+        }
+        @keyframes checkPop {
+          0%, 60% { opacity: 0; transform: scale(0); }
+          70%, 100% { opacity: 1; transform: scale(1); }
         }
       `}</style>
 
-      {/* ── PHASE 1: HiKorea Scrolling Complexity ── */}
+      {/* ── PHASE 1: Fast scrolling Korean docs → "Simple is Best" ── */}
       <div
         className="absolute inset-0 flex items-center justify-center"
-        style={{ animation: "phase1 12s ease-in-out infinite" }}
+        style={{ animation: "p1show 12s ease-in-out infinite" }}
       >
         <div style={{
-          width: 200, height: 180, overflow: "hidden",
+          width: 220, height: 190, overflow: "hidden",
           borderRadius: 12, position: "relative",
-          background: "rgba(255,255,255,0.4)",
-          border: "1px solid rgba(200,200,210,0.3)",
+          background: "rgba(255,255,255,0.35)",
+          border: "1px solid rgba(200,200,210,0.25)",
         }}>
-          {/* Fake browser/form header */}
-          <div style={{ padding: "6px 8px", borderBottom: "1px solid rgba(200,200,210,0.3)", background: "rgba(240,240,245,0.8)" }}>
-            <div className="flex gap-1">
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: "rgba(200,200,210,0.5)" }} />
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: "rgba(200,200,210,0.5)" }} />
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: "rgba(200,200,210,0.5)" }} />
-            </div>
-          </div>
-          {/* Scrolling document names */}
-          <div style={{
-            animation: "docScroll 8s linear infinite",
-            padding: "8px 10px",
-          }}>
+          {/* Fast scrolling document names */}
+          <div style={{ animation: "fastScroll 3s linear infinite", padding: "6px 12px" }}>
             {[
-              "체류자격변경허가신청서",
-              "고용계약서",
-              "납세사실증명원",
-              "건강진단서",
-              "출입국사실증명서",
-              "외국인등록증 사본",
-              "재직증명서",
-              "사업자등록증 사본",
-              "기술자격증명서류",
-              "범죄경력증명서",
-              "체류자격변경허가신청서",
-              "고용계약서",
-              "납세사실증명원",
-              "건강진단서",
-              "출입국사실증명서",
-              "외국인등록증 사본",
-              "재직증명서",
-              "사업자등록증 사본",
+              "체류자격변경허가신청서", "여권 원본 및 사본", "표준규격 사진 1매",
+              "수수료 (국내체류 6만원)", "고용계약서 원본", "납세사실증명원",
+              "건강진단서", "출입국사실증명서", "외국인등록증 앞뒷면 사본",
+              "재직증명서 또는 경력증명서", "사업자등록증 사본", "기술자격증명서류",
+              "범죄경력증명서 (아포스티유)", "토픽(TOPIK) 성적증명서",
+              "소득금액증명원", "체류지 입증서류", "기능자격증 사본",
+              "체류자격변경허가신청서", "여권 원본 및 사본", "표준규격 사진 1매",
+              "수수료 (국내체류 6만원)", "고용계약서 원본", "납세사실증명원",
+              "건강진단서", "출입국사실증명서", "외국인등록증 앞뒷면 사본",
             ].map((doc, i) => (
               <div
                 key={i}
                 style={{
-                  fontSize: i % 4 === 0 ? 10 : 8,
-                  fontWeight: i % 4 === 0 ? 600 : 400,
-                  color: i % 4 === 0 ? "#1A1D26" : "#A3ACCD",
+                  fontSize: i % 5 === 0 ? 11 : 9,
+                  fontWeight: i % 5 === 0 ? 700 : 400,
+                  color: i % 5 === 0 ? "#1A1D26" : "#B0B4C8",
                   fontFamily: "sans-serif",
-                  padding: "3px 0",
-                  borderBottom: "1px solid rgba(220,220,230,0.3)",
+                  padding: "2px 0",
                   whiteSpace: "nowrap",
-                  transition: "all 0.3s ease",
+                  lineHeight: 1.6,
                 }}
               >
                 {doc}
               </div>
             ))}
           </div>
+          {/* "Simple is Best" overlay */}
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              background: "rgba(248,248,250,0.85)",
+              animation: "simpleIsBest 3.2s ease-in-out infinite",
+            }}
+          >
+            <span style={{
+              fontSize: 22, fontWeight: 600, color: "#635BFF",
+              fontFamily: "Inter, sans-serif", letterSpacing: "-0.3px",
+            }}>
+              Simple is Best
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* ── PHASE 2: Translation Motion ── */}
+      {/* ── PHASE 2: Word-by-word translation (center, one at a time) ── */}
       <div
-        className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-        style={{ animation: "phase2 12s ease-in-out infinite", padding: "0 20px" }}
+        className="absolute inset-0 flex flex-col items-center justify-center gap-6"
+        style={{ animation: "p2show 12s ease-in-out infinite" }}
       >
         {[
-          { kr: "체류자격변경", en: "Status Change", vi: "Thay đổi tư cách", zh: "签证变更", delay: 0 },
-          { kr: "출입국사실증명", en: "Entry Records", vi: "Xuất nhập cảnh", zh: "出入境证明", delay: 0.8 },
-          { kr: "납세사실증명", en: "Tax Certificate", vi: "Chứng nhận thuế", zh: "纳税证明", delay: 1.6 },
+          { kr: "체류자격변경", translated: "Status Change", delay: 0 },
+          { kr: "출입국사실증명", translated: "出入境证明", delay: 2.4 },
+          { kr: "납세사실증명", translated: "Chứng nhận thuế", delay: 4.8 },
         ].map((item, i) => (
-          <div key={i} className="relative" style={{ textAlign: "center" }}>
-            {/* Korean word with strikethrough */}
+          <div key={i} style={{ textAlign: "center", position: "relative", height: 28, width: 200 }}>
+            {/* Korean word — slides left and fades */}
             <div style={{
-              fontSize: 14, fontWeight: 600, color: "#6B7294",
-              fontFamily: "sans-serif", position: "relative",
-              display: "inline-block",
-              animation: `fadeReplace 3.5s ease ${item.delay}s infinite`,
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 15, fontWeight: 600, color: "#6B7294",
+              fontFamily: "sans-serif",
+              animation: `wordKR 7.2s ease ${item.delay}s infinite`,
             }}>
               {item.kr}
-              <div style={{
-                position: "absolute", top: "50%", left: 0,
-                height: 2, background: "#EF4444", borderRadius: 1,
-                animation: `strikethrough 3.5s ease ${item.delay}s infinite`,
-              }} />
             </div>
-            {/* Translated versions */}
-            <div className="flex justify-center gap-2" style={{
-              animation: `fadeIn 3.5s ease ${item.delay}s infinite`,
+            {/* Translated word — slides in from right */}
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, fontWeight: 600, color: "#635BFF",
+              fontFamily: "Inter, sans-serif",
+              animation: `wordTranslated 7.2s ease ${item.delay}s infinite`,
             }}>
-              <span style={{ fontSize: 9, fontWeight: 500, color: "#635BFF", fontFamily: "Inter, sans-serif" }}>{item.en}</span>
-              <span style={{ fontSize: 9, fontWeight: 500, color: "#635BFF", fontFamily: "Inter, sans-serif", opacity: 0.7 }}>{item.zh}</span>
-              <span style={{ fontSize: 9, fontWeight: 500, color: "#635BFF", fontFamily: "Inter, sans-serif", opacity: 0.7 }}>{item.vi}</span>
+              {item.translated}
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── PHASE 3: Phivis Clean UI Demo ── */}
+      {/* ── PHASE 3: Phivis UI — 3 taps, expand, check ── */}
       <div
         className="absolute inset-0 flex items-center justify-center"
-        style={{ animation: "phase3 12s ease-in-out infinite" }}
+        style={{ animation: "p3show 12s ease-in-out infinite" }}
       >
         <div style={{
-          width: 210, height: 180, borderRadius: 16,
-          background: "#fff", border: "1px solid rgba(99,91,255,0.1)",
-          boxShadow: "0 4px 16px rgba(99,91,255,0.08)",
-          padding: "10px 12px", overflow: "hidden",
+          width: 230, height: 190, borderRadius: 16,
+          background: "#fff", border: "1px solid rgba(99,91,255,0.08)",
+          boxShadow: "0 4px 16px rgba(99,91,255,0.06)",
+          padding: "12px 14px", overflow: "hidden",
         }}>
-          {/* Mini header */}
-          <div className="flex items-center gap-1.5" style={{ marginBottom: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 4, background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }} />
-            <span style={{ fontSize: 8, fontWeight: 600, color: "#1A1D26", fontFamily: "Inter, sans-serif" }}>Document Checklist</span>
+          {/* Header */}
+          <div className="flex items-center gap-2" style={{ marginBottom: 10 }}>
+            <div style={{ width: 14, height: 14, borderRadius: 5, background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }} />
+            <span style={{ fontSize: 10, fontWeight: 600, color: "#1A1D26", fontFamily: "Inter, sans-serif" }}>Document Checklist</span>
             <div className="flex gap-0.5" style={{ marginLeft: "auto" }}>
-              <span style={{ fontSize: 6 }}>🇺🇸</span>
-              <span style={{ fontSize: 6 }}>🇻🇳</span>
+              <span style={{ fontSize: 7 }}>🇺🇸</span>
+              <span style={{ fontSize: 7 }}>🇻🇳</span>
+              <span style={{ fontSize: 7 }}>🇨🇳</span>
             </div>
           </div>
 
-          {/* 3 document rows with tap animation */}
+          {/* 3 document rows */}
           {[
-            { name: "Passport copy", desc: "Scan to auto-fill", delay: "0s" },
-            { name: "Employment contract", desc: "Upload or photo", delay: "1.5s" },
-            { name: "Health certificate", desc: "Nearby hospitals", delay: "3s" },
+            { name: "Passport copy", desc: "Scan to auto-fill your info", icon: "📄", delay: "0s" },
+            { name: "Employment contract", desc: "Upload photo — we'll extract details", icon: "📋", delay: "1.4s" },
+            { name: "Health certificate", desc: "Find nearby hospitals on map", icon: "🏥", delay: "2.8s" },
           ].map((doc, i) => (
-            <div key={i} style={{
-              borderRadius: 8, padding: "6px 8px", marginBottom: 4,
-              animation: `tapDoc 5s ease ${doc.delay} infinite`,
-              position: "relative",
-            }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p style={{ fontSize: 8, fontWeight: 600, color: "#1A1D26", margin: 0, fontFamily: "Inter, sans-serif" }}>{doc.name}</p>
-                  <p style={{ fontSize: 6, color: "#6B7294", margin: "1px 0 0", fontFamily: "Inter, sans-serif" }}>{doc.desc}</p>
+            <div key={i} style={{ marginBottom: 4 }}>
+              {/* Card row */}
+              <div style={{
+                borderRadius: 10, padding: "7px 10px",
+                background: "#F6F7F9",
+                animation: `cardTap 4.5s ease ${doc.delay} infinite`,
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: 10 }}>{doc.icon}</span>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: "#1A1D26", fontFamily: "Inter, sans-serif" }}>{doc.name}</span>
                 </div>
                 {/* Check mark */}
                 <div style={{
-                  width: 14, height: 14, borderRadius: 7,
-                  background: "rgba(16,185,129,0.15)",
+                  width: 16, height: 16, borderRadius: 8,
+                  background: "rgba(16,185,129,0.12)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  animation: `checkAppear 5s ease ${doc.delay} infinite`,
+                  animation: `checkPop 4.5s ease ${doc.delay} infinite`,
                 }}>
-                  <span style={{ fontSize: 8, color: "#10B981" }}>✓</span>
+                  <span style={{ fontSize: 9, color: "#10B981", fontWeight: 700 }}>✓</span>
                 </div>
+              </div>
+              {/* Expanding detail */}
+              <div style={{
+                overflow: "hidden",
+                animation: `cardExpand 4.5s ease ${doc.delay} infinite`,
+                borderRadius: "0 0 10px 10px",
+                background: "rgba(99,91,255,0.03)",
+                fontSize: 8, color: "#6B7294",
+                fontFamily: "Inter, sans-serif",
+                lineHeight: 1.4,
+              }}>
+                {doc.desc}
               </div>
             </div>
           ))}
