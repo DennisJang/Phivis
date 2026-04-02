@@ -41,43 +41,125 @@ export function Step2Illustration() {
 /* ═══ STEP 3 ═══ */
 export function Step3Illustration() {
   return (
-    <div className="relative size-full flex items-center justify-center" style={{ gap: 24 }}>
+    <div className="relative size-full flex items-center justify-center">
       <style>{`
-        @keyframes sandDrop { 0%{transform:translateY(0);opacity:0.8;} 100%{transform:translateY(20px);opacity:0;} }
-        @keyframes notifSlide { 0%,8%{opacity:0;transform:translateY(-8px);} 15%,75%{opacity:1;transform:translateY(0);} 85%,100%{opacity:0;transform:translateY(4px);} }
+        @keyframes notif1 {
+          0%,5% { opacity:0; transform:translateY(-20px) scale(0.95); }
+          12%,60% { opacity:1; transform:translateY(0) scale(1); }
+          70%,100% { opacity:0.3; transform:translateY(0) scale(0.98); }
+        }
+        @keyframes notif2 {
+          0%,25% { opacity:0; transform:translateY(-20px) scale(0.95); }
+          32%,70% { opacity:1; transform:translateY(0) scale(1); }
+          80%,100% { opacity:0.3; transform:translateY(0) scale(0.98); }
+        }
+        @keyframes notif3 {
+          0%,45% { opacity:0; transform:translateY(-20px) scale(0.95); }
+          52%,80% { opacity:1; transform:translateY(0) scale(1); }
+          90%,100% { opacity:0; transform:translateY(4px) scale(0.97); }
+        }
       `}</style>
-      <motion.div animate={float(0, 4)}>
-        <div style={{ position:"relative", width:48, height:68 }}>
-          <div style={{ width:48,height:10,borderRadius:"50%",background:"linear-gradient(135deg,#8b5cf6,#6366f1)",boxShadow:"0 2px 8px rgba(99,102,241,0.2),inset 0 -1px 2px rgba(0,0,0,0.1),inset 0 2px 2px rgba(255,255,255,0.3)" }}/>
-          <div style={{ width:40,height:22,margin:"0 auto",background:"linear-gradient(180deg,rgba(139,92,246,0.12) 0%,rgba(99,91,255,0.06) 100%)",borderRadius:"2px 2px 50% 50%/2px 2px 100% 100%",border:"1px solid rgba(139,92,246,0.1)",position:"relative",overflow:"hidden" }}>
-            {[0,1,2].map(i=>(<div key={i} style={{ position:"absolute",left:18+(i-1)*3,bottom:0,width:3,height:3,borderRadius:"50%",background:"#F59E0B",animation:`sandDrop 1.8s ease-in ${i*0.5}s infinite` }}/>))}
-          </div>
-          <div style={{ width:6,height:4,margin:"0 auto",background:"rgba(139,92,246,0.15)",borderRadius:1 }}/>
-          <div style={{ width:40,height:22,margin:"0 auto",background:"linear-gradient(0deg,rgba(245,158,11,0.15) 0%,rgba(99,91,255,0.04) 100%)",borderRadius:"50% 50% 2px 2px/100% 100% 2px 2px",border:"1px solid rgba(139,92,246,0.1)" }}/>
-          <div style={{ width:48,height:10,borderRadius:"50%",background:"linear-gradient(135deg,#6366f1,#3b82f6)",boxShadow:"0 4px 10px rgba(99,102,241,0.18),inset 0 2px 2px rgba(255,255,255,0.2),inset 0 -1px 2px rgba(0,0,0,0.1)" }}/>
-          <div style={{ position:"absolute",bottom:-8,left:6,width:36,height:8,borderRadius:"50%",background:"rgba(99,102,241,0.08)",filter:"blur(4px)" }}/>
-        </div>
-      </motion.div>
-      <motion.div animate={float(0.5, 3.8)}>
-        <div style={{ width:110,height:160,borderRadius:18,background:"linear-gradient(180deg,#f8f8fa 0%,#fff 100%)",border:"2px solid rgba(99,91,255,0.12)",boxShadow:"0 10px 28px rgba(99,102,241,0.14),inset 0 1px 1px rgba(255,255,255,0.8)",padding:"12px 8px 8px",display:"flex",flexDirection:"column",gap:6,overflow:"hidden" }}>
-          <div className="flex justify-between items-center" style={{ padding:"0 3px",marginBottom:3 }}>
-            <div style={{ width:20,height:2,borderRadius:1,background:"rgba(0,0,0,0.15)" }}/>
-            <div style={{ width:7,height:7,borderRadius:4,background:"rgba(0,0,0,0.08)" }}/>
-          </div>
-          {[
-            { text:"갱신할 때 되지 않았나요?", delay:0, color:"rgba(99,91,255,0.06)" },
-            { text:"서류, 미리 준비해둘까요?", delay:2, color:"rgba(16,185,129,0.06)" },
-            { text:"안심하세요, 함께할게요", delay:4, color:"rgba(245,158,11,0.06)" },
-          ].map((n,i)=>(
-            <div key={i} style={{ background:n.color,borderRadius:10,padding:"7px 9px",animation:`notifSlide 6s ease-in-out ${n.delay}s infinite` }}>
-              <div className="flex items-center gap-1.5" style={{ marginBottom:3 }}>
-                <div style={{ width:12,height:12,borderRadius:4,background:"linear-gradient(135deg,#8b5cf6,#3b82f6)" }}/>
-                <span style={{ fontSize:7,fontWeight:600,color:"#6B7294",fontFamily:"Inter, sans-serif" }}>Phivis</span>
+
+      {/* Phone frame — realistic proportions */}
+      <motion.div animate={float(0, 4.5)}>
+        <div style={{
+          width: 150, height: 260, borderRadius: 24,
+          background: "linear-gradient(180deg, #1A1D26 0%, #2A2D36 100%)",
+          padding: 4,
+          boxShadow: "0 16px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.06)",
+          position: "relative",
+        }}>
+          {/* Screen */}
+          <div style={{
+            width: "100%", height: "100%", borderRadius: 20,
+            background: "linear-gradient(180deg, #f2f3f8 0%, #ffffff 30%)",
+            overflow: "hidden", position: "relative",
+          }}>
+            {/* Dynamic Island */}
+            <div style={{
+              width: 40, height: 10, borderRadius: 8,
+              background: "#1A1D26",
+              position: "absolute", top: 6, left: "50%", transform: "translateX(-50%)",
+              zIndex: 10,
+            }} />
+
+            {/* Status bar */}
+            <div className="flex justify-between items-center" style={{ padding: "10px 10px 0", position: "relative", zIndex: 5 }}>
+              <span style={{ fontSize: 7, fontWeight: 600, color: "#1A1D26", fontFamily: "Inter, sans-serif" }}>9:41</span>
+              <div className="flex gap-0.5 items-center">
+                {/* Signal bars */}
+                {[4, 6, 8, 10].map((h, i) => (
+                  <div key={i} style={{ width: 2, height: h, borderRadius: 1, background: i < 3 ? "#1A1D26" : "rgba(0,0,0,0.2)" }} />
+                ))}
+                <div style={{ width: 4 }} />
+                {/* Battery */}
+                <div style={{ width: 14, height: 7, borderRadius: 2, border: "1px solid rgba(0,0,0,0.3)", position: "relative" }}>
+                  <div style={{ width: "70%", height: "100%", borderRadius: 1, background: "#10B981" }} />
+                </div>
               </div>
-              <p style={{ fontSize:8.5,fontWeight:500,color:"#1A1D26",margin:0,lineHeight:1.35,fontFamily:"Inter, sans-serif" }}>{n.text}</p>
             </div>
-          ))}
+
+            {/* Lock screen time */}
+            <div style={{ textAlign: "center", padding: "16px 0 8px" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: "#1A1D26", fontFamily: "Inter, sans-serif", letterSpacing: "-1px", lineHeight: 1 }}>9:41</div>
+              <div style={{ fontSize: 7, color: "#6B7294", fontFamily: "Inter, sans-serif", marginTop: 2 }}>Tuesday, March 31</div>
+            </div>
+
+            {/* Notification stack — staggered slide-in from top */}
+            <div style={{ padding: "0 6px", display: "flex", flexDirection: "column", gap: 5 }}>
+              {[
+                {
+                  text: "비자 만료가 다가오고 있어요",
+                  sub: "지금 서류를 준비하면 여유 있어요",
+                  anim: "notif1", color: "rgba(99,91,255,0.08)",
+                  time: "지금",
+                },
+                {
+                  text: "서류 2개가 아직 준비되지 않았어요",
+                  sub: "탭해서 바로 시작하기",
+                  anim: "notif2", color: "rgba(16,185,129,0.06)",
+                  time: "10분 전",
+                },
+                {
+                  text: "걱정 마세요, 함께 도와드릴게요",
+                  sub: "Phivis가 단계별로 안내해요",
+                  anim: "notif3", color: "rgba(245,158,11,0.05)",
+                  time: "1시간 전",
+                },
+              ].map((n, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: n.color,
+                    backdropFilter: "blur(8px)",
+                    borderRadius: 12,
+                    padding: "7px 9px",
+                    animation: `${n.anim} 7s ease-in-out infinite`,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
+                    <div className="flex items-center gap-1.5">
+                      <div style={{ width: 14, height: 14, borderRadius: 5, background: "linear-gradient(135deg, #8b5cf6, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 7, color: "#fff", fontWeight: 700 }}>P</span>
+                      </div>
+                      <span style={{ fontSize: 7, fontWeight: 600, color: "#6B7294", fontFamily: "Inter, sans-serif" }}>Phivis</span>
+                    </div>
+                    <span style={{ fontSize: 6, color: "#A3ACCD", fontFamily: "Inter, sans-serif" }}>{n.time}</span>
+                  </div>
+                  <p style={{ fontSize: 8, fontWeight: 600, color: "#1A1D26", margin: 0, lineHeight: 1.4, fontFamily: "Inter, sans-serif" }}>{n.text}</p>
+                  <p style={{ fontSize: 7, fontWeight: 400, color: "#6B7294", margin: "1px 0 0", lineHeight: 1.3, fontFamily: "Inter, sans-serif" }}>{n.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Home indicator */}
+            <div style={{ position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)", width: 40, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.15)" }} />
+          </div>
         </div>
+
+        {/* Phone shadow on ground */}
+        <div style={{ width: 100, height: 10, borderRadius: "50%", background: "rgba(99,102,241,0.06)", filter: "blur(6px)", margin: "8px auto 0" }} />
       </motion.div>
     </div>
   );
