@@ -38,111 +38,41 @@ export function Step2Illustration() {
   );
 }
 
-/* ═══ STEP 3 ═══ */
+/* ═══ STEP 3: Realistic phone with visa notifications ═══ */
 export function Step3Illustration() {
   return (
     <div className="relative size-full flex items-center justify-center">
       <style>{`
-        @keyframes notif1 {
-          0%,5% { opacity:0; transform:translateY(-20px) scale(0.95); }
-          12%,60% { opacity:1; transform:translateY(0) scale(1); }
-          70%,100% { opacity:0.3; transform:translateY(0) scale(0.98); }
-        }
-        @keyframes notif2 {
-          0%,25% { opacity:0; transform:translateY(-20px) scale(0.95); }
-          32%,70% { opacity:1; transform:translateY(0) scale(1); }
-          80%,100% { opacity:0.3; transform:translateY(0) scale(0.98); }
-        }
-        @keyframes notif3 {
-          0%,45% { opacity:0; transform:translateY(-20px) scale(0.95); }
-          52%,80% { opacity:1; transform:translateY(0) scale(1); }
-          90%,100% { opacity:0; transform:translateY(4px) scale(0.97); }
-        }
+        @keyframes notif1 { 0%,5%{opacity:0;transform:translateY(-20px) scale(0.95);} 12%,60%{opacity:1;transform:translateY(0) scale(1);} 70%,100%{opacity:0.3;transform:translateY(0) scale(0.98);} }
+        @keyframes notif2 { 0%,25%{opacity:0;transform:translateY(-20px) scale(0.95);} 32%,70%{opacity:1;transform:translateY(0) scale(1);} 80%,100%{opacity:0.3;transform:translateY(0) scale(0.98);} }
+        @keyframes notif3 { 0%,45%{opacity:0;transform:translateY(-20px) scale(0.95);} 52%,80%{opacity:1;transform:translateY(0) scale(1);} 90%,100%{opacity:0;transform:translateY(4px) scale(0.97);} }
       `}</style>
-
-      {/* Phone frame — realistic proportions */}
       <motion.div animate={float(0, 4.5)}>
-        <div style={{
-          width: 150, height: 260, borderRadius: 24,
-          background: "linear-gradient(180deg, #1A1D26 0%, #2A2D36 100%)",
-          padding: 4,
-          boxShadow: "0 16px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.06)",
-          position: "relative",
-        }}>
-          {/* Screen */}
-          <div style={{
-            width: "100%", height: "100%", borderRadius: 20,
-            background: "linear-gradient(180deg, #f2f3f8 0%, #ffffff 30%)",
-            overflow: "hidden", position: "relative",
-          }}>
-            {/* Dynamic Island */}
-            <div style={{
-              width: 40, height: 10, borderRadius: 8,
-              background: "#1A1D26",
-              position: "absolute", top: 6, left: "50%", transform: "translateX(-50%)",
-              zIndex: 10,
-            }} />
-
-            {/* Status bar */}
+        <div style={{ width: 150, height: 260, borderRadius: 24, background: "linear-gradient(180deg, #1A1D26 0%, #2A2D36 100%)", padding: 4, boxShadow: "0 16px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 1px rgba(255,255,255,0.06)", position: "relative" }}>
+          <div style={{ width: "100%", height: "100%", borderRadius: 20, background: "linear-gradient(180deg, #f2f3f8 0%, #ffffff 30%)", overflow: "hidden", position: "relative" }}>
+            <div style={{ width: 40, height: 10, borderRadius: 8, background: "#1A1D26", position: "absolute", top: 6, left: "50%", transform: "translateX(-50%)", zIndex: 10 }} />
             <div className="flex justify-between items-center" style={{ padding: "10px 10px 0", position: "relative", zIndex: 5 }}>
               <span style={{ fontSize: 7, fontWeight: 600, color: "#1A1D26", fontFamily: "Inter, sans-serif" }}>9:41</span>
               <div className="flex gap-0.5 items-center">
-                {/* Signal bars */}
-                {[4, 6, 8, 10].map((h, i) => (
-                  <div key={i} style={{ width: 2, height: h, borderRadius: 1, background: i < 3 ? "#1A1D26" : "rgba(0,0,0,0.2)" }} />
-                ))}
+                {[4,6,8,10].map((h,i)=>(<div key={i} style={{ width:2, height:h, borderRadius:1, background: i<3?"#1A1D26":"rgba(0,0,0,0.2)" }} />))}
                 <div style={{ width: 4 }} />
-                {/* Battery */}
-                <div style={{ width: 14, height: 7, borderRadius: 2, border: "1px solid rgba(0,0,0,0.3)", position: "relative" }}>
-                  <div style={{ width: "70%", height: "100%", borderRadius: 1, background: "#10B981" }} />
-                </div>
+                <div style={{ width: 14, height: 7, borderRadius: 2, border: "1px solid rgba(0,0,0,0.3)", position: "relative" }}><div style={{ width: "70%", height: "100%", borderRadius: 1, background: "#10B981" }} /></div>
               </div>
             </div>
-
-            {/* Lock screen time */}
             <div style={{ textAlign: "center", padding: "16px 0 8px" }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: "#1A1D26", fontFamily: "Inter, sans-serif", letterSpacing: "-1px", lineHeight: 1 }}>9:41</div>
               <div style={{ fontSize: 7, color: "#6B7294", fontFamily: "Inter, sans-serif", marginTop: 2 }}>Tuesday, March 31</div>
             </div>
-
-            {/* Notification stack — staggered slide-in from top */}
             <div style={{ padding: "0 6px", display: "flex", flexDirection: "column", gap: 5 }}>
               {[
-                {
-                  text: "비자 만료가 다가오고 있어요",
-                  sub: "지금 서류를 준비하면 여유 있어요",
-                  anim: "notif1", color: "rgba(99,91,255,0.08)",
-                  time: "지금",
-                },
-                {
-                  text: "서류 2개가 아직 준비되지 않았어요",
-                  sub: "탭해서 바로 시작하기",
-                  anim: "notif2", color: "rgba(16,185,129,0.06)",
-                  time: "10분 전",
-                },
-                {
-                  text: "걱정 마세요, 함께 도와드릴게요",
-                  sub: "Phivis가 단계별로 안내해요",
-                  anim: "notif3", color: "rgba(245,158,11,0.05)",
-                  time: "1시간 전",
-                },
-              ].map((n, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: n.color,
-                    backdropFilter: "blur(8px)",
-                    borderRadius: 12,
-                    padding: "7px 9px",
-                    animation: `${n.anim} 7s ease-in-out infinite`,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  }}
-                >
+                { text: "비자 만료가 다가오고 있어요", sub: "지금 서류를 준비하면 여유 있어요", anim: "notif1", color: "rgba(99,91,255,0.08)", time: "지금" },
+                { text: "서류 2개가 아직 준비되지 않았어요", sub: "탭해서 바로 시작하기", anim: "notif2", color: "rgba(16,185,129,0.06)", time: "10분 전" },
+                { text: "걱정 마세요, 함께 도와드릴게요", sub: "Phivis가 단계별로 안내해요", anim: "notif3", color: "rgba(245,158,11,0.05)", time: "1시간 전" },
+              ].map((n,i)=>(
+                <div key={i} style={{ background: n.color, backdropFilter: "blur(8px)", borderRadius: 12, padding: "7px 9px", animation: `${n.anim} 7s ease-in-out infinite`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
                   <div className="flex items-center justify-between" style={{ marginBottom: 2 }}>
                     <div className="flex items-center gap-1.5">
-                      <div style={{ width: 14, height: 14, borderRadius: 5, background: "linear-gradient(135deg, #8b5cf6, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 7, color: "#fff", fontWeight: 700 }}>P</span>
-                      </div>
+                      <div style={{ width: 14, height: 14, borderRadius: 5, background: "linear-gradient(135deg, #8b5cf6, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 7, color: "#fff", fontWeight: 700 }}>P</span></div>
                       <span style={{ fontSize: 7, fontWeight: 600, color: "#6B7294", fontFamily: "Inter, sans-serif" }}>Phivis</span>
                     </div>
                     <span style={{ fontSize: 6, color: "#A3ACCD", fontFamily: "Inter, sans-serif" }}>{n.time}</span>
@@ -152,28 +82,21 @@ export function Step3Illustration() {
                 </div>
               ))}
             </div>
-
-            {/* Home indicator */}
             <div style={{ position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)", width: 40, height: 4, borderRadius: 2, background: "rgba(0,0,0,0.15)" }} />
           </div>
         </div>
-
-        {/* Phone shadow on ground */}
         <div style={{ width: 100, height: 10, borderRadius: "50%", background: "rgba(99,102,241,0.06)", filter: "blur(6px)", margin: "8px auto 0" }} />
       </motion.div>
     </div>
   );
 }
 
-/* ═══ STEP 4: Language — Kinetic Typography (Framer Motion sequential) ═══
-   Apple rhythm: fast in (0.25s) → hold (1.2s) → fast out (0.2s)
-   Nike direction: always left-to-right flow
-   Google color shift: gray(KR) → indigo(translated)
-*/
+/* ═══ STEP 4: Phivis Character + Dynamic Island Translation + App Demo ═══ */
 export function Step4Illustration() {
-  const phase = useAnimation();
   const scroll = useAnimation();
-  const sib = useAnimation(); // Simple is Best
+  const sib = useAnimation();
+  const character = useAnimation();
+  const pill = useAnimation();
   const w1kr = useAnimation();
   const w1tr = useAnimation();
   const w2kr = useAnimation();
@@ -187,105 +110,65 @@ export function Step4Illustration() {
   useEffect(() => {
     const run = async () => {
       while (true) {
-        // ═══ PHASE 1: Scroll + "Simple is Best" ═══
-        scroll.set({ opacity: 1 });
-        sib.set({ opacity: 0, scale: 0.7 });
-        w1kr.set({ opacity: 0 }); w1tr.set({ opacity: 0 });
-        w2kr.set({ opacity: 0 }); w2tr.set({ opacity: 0 });
-        w3kr.set({ opacity: 0 }); w3tr.set({ opacity: 0 });
+        scroll.set({ opacity: 1 }); sib.set({ opacity: 0, scale: 0.7 }); character.set({ opacity: 1 });
+        pill.set({ opacity: 0, scale: 0.9 });
+        w1kr.set({ opacity: 0 }); w1tr.set({ opacity: 0 }); w2kr.set({ opacity: 0 }); w2tr.set({ opacity: 0 }); w3kr.set({ opacity: 0 }); w3tr.set({ opacity: 0 });
         midPhrase.set({ opacity: 0 }); appUI.set({ opacity: 0 }); endPhrase.set({ opacity: 0 });
 
-        // Show scroll for 2s (fast, overwhelming)
+        // Phase 1: Scroll + Character → Simple is Best
         await new Promise(r => setTimeout(r, 2000));
-
-        // "Simple is Best" — big overshoot entrance
-        await sib.start({ opacity: 1, scale: [0.7, 1.06, 1.0], transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } });
+        await sib.start({ opacity: 1, scale: [0.7, 1.06, 1.0], transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
         await new Promise(r => setTimeout(r, 1200));
-
-        // Fade both out
-        await Promise.all([
-          scroll.start({ opacity: 0, transition: { duration: 0.3 } }),
-          sib.start({ opacity: 0, transition: { duration: 0.3 } }),
-        ]);
-
+        await Promise.all([scroll.start({ opacity: 0, transition: { duration: 0.3 } }), sib.start({ opacity: 0, transition: { duration: 0.3 } }), character.start({ opacity: 0, transition: { duration: 0.3 } })]);
         await new Promise(r => setTimeout(r, 300));
 
-        // ═══ PHASE 2: Translation — one word at a time ═══
+        // Phase 2: Dynamic Island pill
+        await pill.start({ opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
+        await new Promise(r => setTimeout(r, 400));
 
-        // Word 1: 체류자격변경 → Status Change
-        await w1kr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } });
+        // Word 1
+        await w1kr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
         await new Promise(r => setTimeout(r, 1000));
-        w1tr.set({ x: 60 });
-        await Promise.all([
-          w1kr.start({ opacity: 0, x: -60, transition: { duration: 0.15, ease: "easeIn" } }),
-          w1tr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }),
-        ]);
+        w1tr.set({ x: 40 });
+        await Promise.all([w1kr.start({ opacity: 0, x: -40, transition: { duration: 0.15, ease: "easeIn" } }), w1tr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } })]);
         await new Promise(r => setTimeout(r, 900));
         await w1tr.start({ opacity: 0, transition: { duration: 0.15 } });
+        await new Promise(r => setTimeout(r, 150));
 
-        await new Promise(r => setTimeout(r, 200));
-
-        // Word 2: 출입국사실증명 → 出入境证明
-        await w2kr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } });
+        // Word 2
+        await w2kr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
         await new Promise(r => setTimeout(r, 1000));
-        w2tr.set({ x: 60 });
-        await Promise.all([
-          w2kr.start({ opacity: 0, x: -60, transition: { duration: 0.15, ease: "easeIn" } }),
-          w2tr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }),
-        ]);
+        w2tr.set({ x: 40 });
+        await Promise.all([w2kr.start({ opacity: 0, x: -40, transition: { duration: 0.15, ease: "easeIn" } }), w2tr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } })]);
         await new Promise(r => setTimeout(r, 900));
         await w2tr.start({ opacity: 0, transition: { duration: 0.15 } });
+        await new Promise(r => setTimeout(r, 150));
 
-        await new Promise(r => setTimeout(r, 200));
-
-        // Word 3: 납세사실증명 → Chứng nhận thuế
-        await w3kr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } });
+        // Word 3
+        await w3kr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
         await new Promise(r => setTimeout(r, 1000));
-        w3tr.set({ x: 60 });
-        await Promise.all([
-          w3kr.start({ opacity: 0, x: -60, transition: { duration: 0.15, ease: "easeIn" } }),
-          w3tr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }),
-        ]);
+        w3tr.set({ x: 40 });
+        await Promise.all([w3kr.start({ opacity: 0, x: -40, transition: { duration: 0.15, ease: "easeIn" } }), w3tr.start({ opacity: 1, x: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } })]);
         await new Promise(r => setTimeout(r, 900));
         await w3tr.start({ opacity: 0, transition: { duration: 0.15 } });
 
-        // "어려운 단어들도 쉽게"
-        await midPhrase.start({ opacity: 1, scale: [0.85, 1.04, 1.0], transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } });
-        await new Promise(r => setTimeout(r, 1500));
-        await midPhrase.start({ opacity: 0, transition: { duration: 0.25 } });
-
+        await pill.start({ opacity: 0, transition: { duration: 0.2 } });
+        await midPhrase.start({ opacity: 1, scale: [0.85, 1.04, 1.0], transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
+        await new Promise(r => setTimeout(r, 1300));
+        await midPhrase.start({ opacity: 0, transition: { duration: 0.2 } });
         await new Promise(r => setTimeout(r, 300));
 
-        // ═══ PHASE 3: App demo ═══
+        // Phase 3: App demo
         await appUI.start({ opacity: 1, scale: 1, transition: { duration: 0.35 } });
         await new Promise(r => setTimeout(r, 4500));
-
-        // "압도적이고 직관적인 UI"
-        await endPhrase.start({ opacity: 1, scale: [0.85, 1.04, 1.0], transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } });
+        await endPhrase.start({ opacity: 1, scale: [0.85, 1.04, 1.0], transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } });
         await new Promise(r => setTimeout(r, 1500));
-
-        // Fade all out and loop
-        await Promise.all([
-          appUI.start({ opacity: 0, transition: { duration: 0.3 } }),
-          endPhrase.start({ opacity: 0, transition: { duration: 0.3 } }),
-        ]);
-
+        await Promise.all([appUI.start({ opacity: 0, transition: { duration: 0.3 } }), endPhrase.start({ opacity: 0, transition: { duration: 0.3 } })]);
         await new Promise(r => setTimeout(r, 500));
       }
     };
     run();
-  }, [phase, scroll, sib, w1kr, w1tr, w2kr, w2tr, w3kr, w3tr, midPhrase, appUI, endPhrase]);
-
-  const krStyle: React.CSSProperties = {
-    fontSize: 24, fontWeight: 600, color: "#B0B8C8",
-    fontFamily: "sans-serif", position: "absolute",
-    whiteSpace: "nowrap",
-  };
-  const trStyle: React.CSSProperties = {
-    fontSize: 28, fontWeight: 700, color: "#635BFF",
-    fontFamily: "Inter, sans-serif", position: "absolute",
-    whiteSpace: "nowrap",
-  };
+  }, [scroll, sib, character, pill, w1kr, w1tr, w2kr, w2tr, w3kr, w3tr, midPhrase, appUI, endPhrase]);
 
   return (
     <div className="relative size-full overflow-hidden flex items-center justify-center">
@@ -294,66 +177,109 @@ export function Step4Illustration() {
         @keyframes cardTap4 { 0%,8%{transform:scale(1);} 10%{transform:scale(0.97);} 12%{transform:scale(1);} 100%{transform:scale(1);} }
         @keyframes expand4 { 0%,11%{max-height:0;opacity:0;} 16%,52%{max-height:40px;opacity:1;} 60%,100%{max-height:0;opacity:0;} }
         @keyframes check4 { 0%,56%{opacity:0;transform:scale(0);} 64%,100%{opacity:1;transform:scale(1);} }
+        @keyframes charBob { 0%,100%{transform:translateY(0) rotate(-3deg);} 50%{transform:translateY(-4px) rotate(3deg);} }
       `}</style>
 
-      {/* ── PHASE 1: Scroll ── */}
+      {/* Phase 1: Scroll + Phivis Character */}
       <motion.div animate={scroll} className="absolute inset-0 flex items-center justify-center">
-        <div style={{ width:240, height:260, overflow:"hidden", borderRadius:14, position:"relative", background:"rgba(255,255,255,0.35)", border:"1px solid rgba(200,200,210,0.25)" }}>
-          <div style={{ padding:"5px 8px", borderBottom:"1px solid rgba(200,200,210,0.3)", background:"rgba(240,240,245,0.8)" }}>
-            <div className="flex gap-1">{[0,1,2].map(i=><div key={i} style={{ width:5,height:5,borderRadius:3,background:"rgba(200,200,210,0.5)" }}/>)}</div>
+        <div style={{ position: "relative" }}>
+          <div style={{ width:200, height:220, overflow:"hidden", borderRadius:14, background:"rgba(255,255,255,0.35)", border:"1px solid rgba(200,200,210,0.25)" }}>
+            <div style={{ padding:"5px 8px", borderBottom:"1px solid rgba(200,200,210,0.3)", background:"rgba(240,240,245,0.8)" }}>
+              <div className="flex gap-1">{[0,1,2].map(i=><div key={i} style={{ width:5,height:5,borderRadius:3,background:"rgba(200,200,210,0.5)" }} />)}</div>
+            </div>
+            <div style={{ animation:"fastScroll4 1.2s linear infinite", padding:"4px 12px" }}>
+              {["체류자격변경허가신청서","여권 원본 및 사본","표준규격 사진 1매","수수료","고용계약서 원본","납세사실증명원","건강진단서","출입국사실증명서","외국인등록증 사본","재직증명서","사업자등록증 사본","기술자격증명서류","범죄경력증명서","토픽 성적증명서","소득금액증명원","체류자격변경허가신청서","여권 원본 및 사본","고용계약서 원본","납세사실증명원","건강진단서","출입국사실증명서","외국인등록증 사본","재직증명서","사업자등록증 사본"].map((d,i)=>(
+                <div key={i} style={{ fontSize:i%4===0?12:9, fontWeight:i%4===0?700:400, color:i%4===0?"#1A1D26":"#B0B4C8", fontFamily:"sans-serif", padding:"2.5px 0", whiteSpace:"nowrap", lineHeight:1.7 }}>{d}</div>
+              ))}
+            </div>
           </div>
-          <div style={{ animation:"fastScroll4 1.2s linear infinite", padding:"4px 12px" }}>
-            {["체류자격변경허가신청서","여권 원본 및 사본","표준규격 사진 1매","수수료 (국내체류 6만원)","고용계약서 원본","납세사실증명원","건강진단서","출입국사실증명서","외국인등록증 앞뒷면 사본","재직증명서","사업자등록증 사본","기술자격증명서류","범죄경력증명서","토픽 성적증명서","소득금액증명원","체류자격변경허가신청서","여권 원본 및 사본","고용계약서 원본","납세사실증명원","건강진단서","출입국사실증명서","외국인등록증 앞뒷면 사본","재직증명서","사업자등록증 사본"].map((d,i)=>(
-              <div key={i} style={{ fontSize:i%4===0?12:9, fontWeight:i%4===0?700:400, color:i%4===0?"#1A1D26":"#B0B4C8", fontFamily:"sans-serif", padding:"2.5px 0", whiteSpace:"nowrap", lineHeight:1.7 }}>{d}</div>
-            ))}
-          </div>
+          {/* Phivis Character — R7 Max style 2-tier keycap */}
+          <motion.div animate={character} style={{ position:"absolute", right:-54, top:14, animation:"charBob 3s ease-in-out infinite" }}>
+            <div style={{ position:"relative", transform:"rotateY(-10deg) rotateX(8deg)" }}>
+              {/* Bottom base — indigo rounded square */}
+              <div style={{
+                width: 48, height: 48, borderRadius: 14,
+                background: "linear-gradient(145deg, #7C6FFF 0%, #635BFF 40%, #4F46E5 100%)",
+                boxShadow: "0 8px 20px rgba(99,91,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1), inset 0 2px 2px rgba(255,255,255,0.15)",
+                position: "relative",
+              }}>
+                {/* Glass cover — transparent overlay on top half */}
+                <div style={{
+                  position: "absolute", top: -2, left: 2, right: -2, height: 38, borderRadius: 12,
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  pointerEvents: "none",
+                }} />
+                {/* White face plate — sits on top of base */}
+                <div style={{
+                  position: "absolute", top: -6, left: 4, width: 40, height: 34, borderRadius: 11,
+                  background: "linear-gradient(180deg, #FFFFFF 0%, #F4F4F8 100%)",
+                  boxShadow: "0 4px 10px rgba(99,91,255,0.12), inset 0 1px 2px rgba(255,255,255,0.8)",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: 2,
+                }}>
+                  {/* Eyes */}
+                  <div style={{ display: "flex", gap: 8, marginTop: -1 }}>
+                    <div style={{ width: 5, height: 6, borderRadius: "50%", background: "#1A1D26" }} />
+                    <div style={{ width: 5, height: 6, borderRadius: "50%", background: "#1A1D26" }} />
+                  </div>
+                  {/* Smile — curved arc */}
+                  <div style={{
+                    width: 12, height: 6, borderRadius: "0 0 8px 8px",
+                    borderBottom: "2.5px solid #1A1D26",
+                    borderLeft: "1.5px solid #1A1D26",
+                    borderRight: "1.5px solid #1A1D26",
+                    borderTop: "none",
+                    marginTop: -1,
+                  }} />
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 
-      {/* "Simple is Best" overlay */}
-      <motion.div animate={sib} initial={{ opacity: 0, scale: 0.9 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 2, background: "rgba(248,248,250,0.9)" }}>
-        <span style={{ fontSize: 28, fontWeight: 700, color: "#635BFF", fontFamily: "Inter, sans-serif", letterSpacing: "-0.5px" }}>Simple is Best</span>
+      {/* Simple is Best overlay */}
+      <motion.div animate={sib} initial={{ opacity:0, scale:0.7 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex:5, background:"rgba(248,248,250,0.92)" }}>
+        <span style={{ fontSize:28, fontWeight:700, color:"#635BFF", fontFamily:"Inter, sans-serif", letterSpacing:"-0.5px" }}>Simple is Best</span>
       </motion.div>
 
-      {/* ── PHASE 2: Words ── */}
-      {/* Word 1 */}
-      <motion.div animate={w1kr} initial={{ opacity: 0, x: 0 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={krStyle}>체류자격변경</span>
-      </motion.div>
-      <motion.div animate={w1tr} initial={{ opacity: 0, x: 60 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={trStyle}>Status Change</span>
-      </motion.div>
-
-      {/* Word 2 */}
-      <motion.div animate={w2kr} initial={{ opacity: 0, x: 0 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={krStyle}>출입국사실증명</span>
-      </motion.div>
-      <motion.div animate={w2tr} initial={{ opacity: 0, x: 60 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={trStyle}>出入境证明</span>
-      </motion.div>
-
-      {/* Word 3 */}
-      <motion.div animate={w3kr} initial={{ opacity: 0, x: 0 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={krStyle}>납세사실증명</span>
-      </motion.div>
-      <motion.div animate={w3tr} initial={{ opacity: 0, x: 60 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={trStyle}>Chứng nhận thuế</span>
-      </motion.div>
-
-      {/* "어려운 단어들도 쉽게" */}
-      <motion.div animate={midPhrase} initial={{ opacity: 0, scale: 0.9 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
-        <span style={{ fontSize: 18, fontWeight: 600, color: "#6B7294", fontFamily: "Inter, sans-serif" }}>어려운 단어들도 쉽게</span>
+      {/* Phase 2: Dynamic Island pill */}
+      <motion.div animate={pill} initial={{ opacity:0, scale:0.9 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex:6 }}>
+        <div style={{ width:260, height:56, borderRadius:28, background:"#1A1D26", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.1)", position:"relative", overflow:"hidden" }}>
+          <div style={{ position:"absolute", left:16, top:8 }}><span style={{ fontSize:9, fontWeight:500, color:"rgba(255,255,255,0.5)", fontFamily:"Inter, sans-serif" }}>한국어</span></div>
+          <div style={{ position:"absolute", right:16, top:8 }}><span style={{ fontSize:9, fontWeight:500, color:"rgba(99,91,255,0.7)", fontFamily:"Inter, sans-serif" }}>Your language</span></div>
+          {/* Center — Phivis mini icon (where camera would be on iOS) */}
+          <div style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:22, height:22, borderRadius:7, background:"linear-gradient(135deg, #7C6FFF, #4F46E5)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 6px rgba(99,91,255,0.3)" }}>
+            <div style={{ width:14, height:11, borderRadius:4, background:"rgba(255,255,255,0.9)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:1 }}>
+              <div style={{ display:"flex", gap:3 }}>
+                <div style={{ width:2.5, height:3, borderRadius:"50%", background:"#1A1D26" }} />
+                <div style={{ width:2.5, height:3, borderRadius:"50%", background:"#1A1D26" }} />
+              </div>
+              <div style={{ width:5, height:2.5, borderRadius:"0 0 4px 4px", borderBottom:"1.5px solid #1A1D26", borderLeft:"1px solid #1A1D26", borderRight:"1px solid #1A1D26", borderTop:"none" }} />
+            </div>
+          </div>
+          <motion.div animate={w1kr} initial={{ opacity:0, x:0 }} style={{ position:"absolute", left:20, bottom:10 }}><span style={{ fontSize:14, fontWeight:600, color:"rgba(255,255,255,0.8)", fontFamily:"sans-serif", whiteSpace:"nowrap" }}>체류자격변경</span></motion.div>
+          <motion.div animate={w1tr} initial={{ opacity:0, x:40 }} style={{ position:"absolute", right:20, bottom:10 }}><span style={{ fontSize:15, fontWeight:700, color:"#635BFF", fontFamily:"Inter, sans-serif", whiteSpace:"nowrap" }}>Status Change</span></motion.div>
+          <motion.div animate={w2kr} initial={{ opacity:0, x:0 }} style={{ position:"absolute", left:20, bottom:10 }}><span style={{ fontSize:14, fontWeight:600, color:"rgba(255,255,255,0.8)", fontFamily:"sans-serif", whiteSpace:"nowrap" }}>출입국사실증명</span></motion.div>
+          <motion.div animate={w2tr} initial={{ opacity:0, x:40 }} style={{ position:"absolute", right:20, bottom:10 }}><span style={{ fontSize:15, fontWeight:700, color:"#635BFF", fontFamily:"Inter, sans-serif", whiteSpace:"nowrap" }}>出入境证明</span></motion.div>
+          <motion.div animate={w3kr} initial={{ opacity:0, x:0 }} style={{ position:"absolute", left:20, bottom:10 }}><span style={{ fontSize:13, fontWeight:600, color:"rgba(255,255,255,0.8)", fontFamily:"sans-serif", whiteSpace:"nowrap" }}>납세사실증명</span></motion.div>
+          <motion.div animate={w3tr} initial={{ opacity:0, x:40 }} style={{ position:"absolute", right:20, bottom:10 }}><span style={{ fontSize:14, fontWeight:700, color:"#635BFF", fontFamily:"Inter, sans-serif", whiteSpace:"nowrap" }}>Chứng nhận thuế</span></motion.div>
+        </div>
       </motion.div>
 
-      {/* ── PHASE 3: App Demo ── */}
-      <motion.div animate={appUI} initial={{ opacity: 0, scale: 0.95 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 3 }}>
+      {/* 어려운 단어들도 쉽게 */}
+      <motion.div animate={midPhrase} initial={{ opacity:0, scale:0.9 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex:6 }}>
+        <span style={{ fontSize:18, fontWeight:600, color:"#6B7294", fontFamily:"Inter, sans-serif" }}>어려운 단어들도 쉽게</span>
+      </motion.div>
+
+      {/* Phase 3: App Demo */}
+      <motion.div animate={appUI} initial={{ opacity:0, scale:0.95 }} className="absolute inset-0 flex items-center justify-center" style={{ zIndex:6 }}>
         <div style={{ width:240, borderRadius:16, background:"#fff", border:"1px solid rgba(99,91,255,0.08)", boxShadow:"0 4px 16px rgba(99,91,255,0.06)", padding:"12px 14px", overflow:"hidden" }}>
           <div className="flex items-center gap-2" style={{ marginBottom:10 }}>
-            <div style={{ width:14,height:14,borderRadius:5,background:"linear-gradient(135deg,#8b5cf6,#3b82f6)" }}/>
-            <span style={{ fontSize:10,fontWeight:600,color:"#1A1D26",fontFamily:"Inter, sans-serif" }}>Document Checklist</span>
-            <div className="flex gap-0.5" style={{ marginLeft:"auto" }}>
-              <span style={{ fontSize:7 }}>🇺🇸</span><span style={{ fontSize:7 }}>🇻🇳</span><span style={{ fontSize:7 }}>🇨🇳</span>
-            </div>
+            <div style={{ width:14, height:14, borderRadius:5, background:"linear-gradient(135deg,#8b5cf6,#3b82f6)" }} />
+            <span style={{ fontSize:10, fontWeight:600, color:"#1A1D26", fontFamily:"Inter, sans-serif" }}>Document Checklist</span>
+            <div className="flex gap-0.5" style={{ marginLeft:"auto" }}><span style={{ fontSize:7 }}>🇺🇸</span><span style={{ fontSize:7 }}>🇻🇳</span><span style={{ fontSize:7 }}>🇨🇳</span></div>
           </div>
           {[
             { name:"Passport copy", desc:"Scan to auto-fill your info", icon:"📄", delay:"0s" },
@@ -362,23 +288,18 @@ export function Step4Illustration() {
           ].map((doc,i)=>(
             <div key={i} style={{ marginBottom:4 }}>
               <div style={{ borderRadius:10, padding:"7px 10px", background:"#F6F7F9", animation:`cardTap4 4.5s ease ${doc.delay} infinite`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                <div className="flex items-center gap-2">
-                  <span style={{ fontSize:11 }}>{doc.icon}</span>
-                  <span style={{ fontSize:9,fontWeight:600,color:"#1A1D26",fontFamily:"Inter, sans-serif" }}>{doc.name}</span>
-                </div>
-                <div style={{ width:16,height:16,borderRadius:8,background:"rgba(16,185,129,0.12)",display:"flex",alignItems:"center",justifyContent:"center", animation:`check4 4.5s ease ${doc.delay} infinite` }}>
-                  <span style={{ fontSize:9,color:"#10B981",fontWeight:700 }}>✓</span>
-                </div>
+                <div className="flex items-center gap-2"><span style={{ fontSize:11 }}>{doc.icon}</span><span style={{ fontSize:9, fontWeight:600, color:"#1A1D26", fontFamily:"Inter, sans-serif" }}>{doc.name}</span></div>
+                <div style={{ width:16, height:16, borderRadius:8, background:"rgba(16,185,129,0.12)", display:"flex", alignItems:"center", justifyContent:"center", animation:`check4 4.5s ease ${doc.delay} infinite` }}><span style={{ fontSize:9, color:"#10B981", fontWeight:700 }}>✓</span></div>
               </div>
-              <div style={{ overflow:"hidden",borderRadius:"0 0 10px 10px",background:"rgba(99,91,255,0.03)",paddingLeft:10,paddingRight:10,fontSize:8,color:"#6B7294",fontFamily:"Inter, sans-serif",lineHeight:1.4, animation:`expand4 4.5s ease ${doc.delay} infinite` }}>{doc.desc}</div>
+              <div style={{ overflow:"hidden", borderRadius:"0 0 10px 10px", background:"rgba(99,91,255,0.03)", paddingLeft:10, paddingRight:10, fontSize:8, color:"#6B7294", fontFamily:"Inter, sans-serif", lineHeight:1.4, animation:`expand4 4.5s ease ${doc.delay} infinite` }}>{doc.desc}</div>
             </div>
           ))}
         </div>
       </motion.div>
 
-      {/* "압도적이고 직관적인 UI" */}
-      <motion.div animate={endPhrase} initial={{ opacity: 0, scale: 0.9 }} className="absolute inset-x-0 bottom-4 flex justify-center" style={{ zIndex: 4 }}>
-        <span style={{ fontSize: 16, fontWeight: 600, color: "#635BFF", fontFamily: "Inter, sans-serif" }}>Simple is Best</span>
+      {/* Simple is Best ending */}
+      <motion.div animate={endPhrase} initial={{ opacity:0, scale:0.9 }} className="absolute inset-x-0 bottom-4 flex justify-center" style={{ zIndex:7 }}>
+        <span style={{ fontSize:16, fontWeight:600, color:"#635BFF", fontFamily:"Inter, sans-serif" }}>Simple is Best</span>
       </motion.div>
     </div>
   );
@@ -391,25 +312,15 @@ export function Step5Illustration() {
       <motion.div animate={float(0, 3)}>
         <div style={{ width:40,height:60,borderRadius:10,background:"linear-gradient(135deg,#8b5cf6,#6366f1,#3b82f6)",transform:"rotateY(-12deg) rotateX(5deg)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"inset 0 1px 1px rgba(255,255,255,0.3),inset 0 -1px 1px rgba(0,0,0,0.05),0 10px 24px rgba(99,102,241,0.2)" }}>
           <div style={{ width:30,height:46,borderRadius:6,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center" }}>
-            <div className="flex items-end gap-0.5" style={{ height:16 }}>
-              {[6,10,14].map((h,i)=>(<div key={i} style={{ width:3,height:h,borderRadius:1.5,background:"rgba(255,255,255,0.5)" }}/>))}
-            </div>
+            <div className="flex items-end gap-0.5" style={{ height:16 }}>{[6,10,14].map((h,i)=>(<div key={i} style={{ width:3,height:h,borderRadius:1.5,background:"rgba(255,255,255,0.5)" }} />))}</div>
           </div>
         </div>
       </motion.div>
       <motion.div animate={float(0.4, 3.5)} className="relative" style={{ marginTop:-16 }}>
-        {[0,1,2].map(i=>(
-          <div key={i} style={{ width:42,height:13,borderRadius:20,background:i===0?"linear-gradient(135deg,#F59E0B,#FBBF24)":`linear-gradient(135deg,rgba(245,158,11,${0.7-i*0.15}),rgba(251,191,36,${0.6-i*0.15}))`,marginTop:i>0?-4:0,boxShadow:i===0?"inset 0 1px 2px rgba(255,255,255,0.4),0 6px 14px rgba(245,158,11,0.22)":"0 2px 4px rgba(245,158,11,0.08)",display:"flex",alignItems:"center",justifyContent:"center" }}>
-            {i===0&&<span style={{ fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.85)" }}>₩</span>}
-          </div>
-        ))}
+        {[0,1,2].map(i=>(<div key={i} style={{ width:42,height:13,borderRadius:20,background:i===0?"linear-gradient(135deg,#F59E0B,#FBBF24)":`linear-gradient(135deg,rgba(245,158,11,${0.7-i*0.15}),rgba(251,191,36,${0.6-i*0.15}))`,marginTop:i>0?-4:0,boxShadow:i===0?"inset 0 1px 2px rgba(255,255,255,0.4),0 6px 14px rgba(245,158,11,0.22)":"0 2px 4px rgba(245,158,11,0.08)",display:"flex",alignItems:"center",justifyContent:"center" }}>{i===0&&<span style={{ fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.85)" }}>₩</span>}</div>))}
       </motion.div>
       <motion.div animate={float(0.8, 4)} style={{ marginTop:8,display:"flex",flexDirection:"column",alignItems:"center",gap:4 }}>
-        <div className="flex items-center gap-1">
-          {["₩","¥","$"].map((s,i)=>(
-            <div key={s} style={{ width:24,height:24,borderRadius:6,background:`linear-gradient(135deg,rgba(99,91,255,${0.35-i*0.05}),rgba(59,130,246,${0.3-i*0.05}))`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",boxShadow:"0 3px 8px rgba(99,102,241,0.15)" }}>{s}</div>
-          ))}
-        </div>
+        <div className="flex items-center gap-1">{["₩","¥","$"].map((s,i)=>(<div key={s} style={{ width:24,height:24,borderRadius:6,background:`linear-gradient(135deg,rgba(99,91,255,${0.35-i*0.05}),rgba(59,130,246,${0.3-i*0.05}))`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",boxShadow:"0 3px 8px rgba(99,102,241,0.15)" }}>{s}</div>))}</div>
         <span style={{ fontSize:10,color:"rgba(99,91,255,0.4)" }}>↔</span>
       </motion.div>
     </div>
