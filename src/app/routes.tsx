@@ -33,7 +33,7 @@ const Privacy = lazy(() => import("./pages/privacy").then(m => ({ default: m.Pri
 const Terms = lazy(() => import("./pages/terms").then(m => ({ default: m.Terms })));
 
 // === Phase 3 신규 페이지 (Sprint 1~2에서 구현) ===
-const Scan = lazy(() => import("./pages/scan").then(m => ({ default: m.Scan })));
+const Scan = lazy(() => import("./pages/scan"));
 const First30 = lazy(() => import("./pages/first30").then(m => ({ default: m.First30 })));
 const Lab = lazy(() => import("./pages/lab").then(m => ({ default: m.Lab })));
 
