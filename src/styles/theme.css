@@ -1,15 +1,18 @@
 /* ============================================
-   Settle Design System v2.0 — Theme Tokens
-   Stripe 미학 기반. 이 파일은 절대 삭제 금지.
+   Phivis Design System v3.0 — Theme Tokens
+   Stripe 미학 + Dennis DNA 기반.
+   이 파일은 절대 삭제 금지.
 
    구조:
      1. Color Tokens (Light / Dark)
      2. Shadow Tokens
-     3. Gradient Tokens (장식용)
-     4. Animation / Easing / Radius
-     5. Common Animations
-     6. Common State Patterns
-     7. Accessibility Overrides
+     3. Gradient Tokens
+     4. Spacing Tokens
+     5. Radius Tokens
+     6. Motion Tokens (Duration + Easing)
+     7. Common Animations
+     8. Common State Patterns
+     9. Accessibility Overrides
    ============================================ */
 
 /* ========================================================================
@@ -35,28 +38,36 @@
   --color-surface-primary: #FFFFFF;
   --color-surface-secondary: #F6F8FA;
   --color-surface-elevated: #FFFFFF;
+  --color-surface-page: #F2F2F7;          /* v3: Apple 시스템 배경 (DNA 1) */
 
   /* === Border === */
   --color-border-default: #E3E8EF;
   --color-border-strong: #CFD5E2;
   --color-border-focus: #635BFF;
+  --color-border-subtle: rgba(0, 0, 0, 0.04);  /* v3: DNA 1 카드 테두리 */
 
   /* === Overlay === */
   --color-overlay: rgba(0, 0, 0, 0.30);
 
-  /* === Status Background (뱃지/배너용) === */
+  /* === Status Background === */
   --color-bg-success: #D1FAE5;
   --color-bg-warning: #FEF3C7;
   --color-bg-error: #FEE2E2;
   --color-bg-info: #EEF2FF;
 
-  /* === Status Text (뱃지/배너용) === */
+  /* === Status Text === */
   --color-text-success: #065F46;
   --color-text-warning: #92400E;
   --color-text-error: #991B1B;
   --color-text-info: #3730A3;
 
-  /* === Legacy compat (기존 컴포넌트가 참조할 수 있는 별칭) === */
+  /* === Icon (v3 신규) === */
+  --color-icon-primary: #1A1D26;
+  --color-icon-secondary: #6B7294;
+  --color-icon-accent: #635BFF;
+  --color-icon-on-color: #FFFFFF;
+
+  /* === Legacy compat === */
   --color-inactive: #E3E8EF;
 }
 
@@ -77,12 +88,19 @@
   --color-surface-primary: #1A1D26;
   --color-surface-secondary: #22252E;
   --color-surface-elevated: #2B3039;
+  --color-surface-page: #13151A;
 
   --color-border-default: #2B3039;
   --color-border-strong: #3A4050;
   --color-border-focus: #7C75FF;
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
 
   --color-overlay: rgba(0, 0, 0, 0.60);
+
+  --color-icon-primary: #E8ECF4;
+  --color-icon-secondary: #8C99AD;
+  --color-icon-accent: #7C75FF;
+  --color-icon-on-color: #FFFFFF;
 
   --color-inactive: #3A4050;
 }
@@ -92,82 +110,102 @@
    ======================================================================== */
 
 :root {
-  /* 3층 색상 매칭 그림자 (검은색 대신 Indigo 기반) */
+  /* 기본 카드 (리스트 아이템, 소형 요소) */
   --shadow-card:
-    0 1px 2px hsl(243deg 100% 30% / 0.12),
-    0 4px 8px hsl(243deg 100% 30% / 0.08),
-    0 12px 24px hsl(243deg 100% 30% / 0.06);
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04);
 
-  /* 카드 호버: 깊이감 증가 + 떠오르는 느낌 */
+  /* 카드 hover */
   --shadow-card-hover:
-    0 2px 4px hsl(243deg 100% 30% / 0.16),
-    0 8px 16px hsl(243deg 100% 30% / 0.12),
-    0 24px 48px hsl(243deg 100% 30% / 0.10);
+    0 4px 16px rgba(0, 0, 0, 0.10),
+    0 1px 4px rgba(0, 0, 0, 0.06);
 
-  /* 떠있는 요소 (모달, 시트) */
+  /* v3: DNA 1 — 넓고 부드러운 부유감 (위젯 카드 기본) */
+  --shadow-card-soft:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.06);
+
+  /* 모달, 바텀시트 */
   --shadow-elevated:
-    0 2px 4px hsl(243deg 100% 30% / 0.12),
-    0 8px 16px hsl(243deg 100% 30% / 0.10),
-    0 24px 48px hsl(243deg 100% 30% / 0.08);
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
 
   /* 포커스 링 */
   --shadow-focus: 0 0 0 3px rgba(99, 91, 255, 0.15);
   --shadow-focus-error: 0 0 0 3px rgba(239, 68, 68, 0.15);
-
-  /* 3D 물성: inset 하이라이트 (상단 빛 반사) */
-  --shadow-card-3d:
-    0 1px 2px hsl(243deg 100% 30% / 0.12),
-    0 4px 8px hsl(243deg 100% 30% / 0.08),
-    0 12px 24px hsl(243deg 100% 30% / 0.06),
-    inset 0 1px 2px rgba(255, 255, 255, 0.6);
-
-  /* 버튼 3D: 기본 상태 */
-  --shadow-btn:
-    0 2px 4px hsl(243deg 100% 30% / 0.16),
-    0 8px 16px hsl(243deg 100% 30% / 0.12);
-
-  /* 버튼 3D: 호버 (떠오름) */
-  --shadow-btn-hover:
-    0 4px 8px hsl(243deg 100% 30% / 0.20),
-    0 16px 32px hsl(243deg 100% 30% / 0.16);
-
-  /* 버튼 3D: 눌림 */
-  --shadow-btn-active:
-    0 1px 2px hsl(243deg 100% 30% / 0.08),
-    0 4px 8px hsl(243deg 100% 30% / 0.04);
-
-  /* 인풋 3D: 움푹 파인 느낌 */
-  --shadow-input-inset:
-    inset 0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 /* ========================================================================
-   3. GRADIENT TOKENS (장식용 전용)
+   3. GRADIENT TOKENS
    ======================================================================== */
 
 :root {
+  /* Stripe 장식용 (v2 유지) */
   --gradient-stripe-mesh: linear-gradient(135deg, #635BFF 0%, #9B8CFF 30%, #FF7EB3 60%, #80E9FF 100%);
   --gradient-stripe-subtle: linear-gradient(135deg, rgba(99,91,255,0.06) 0%, rgba(155,140,255,0.04) 50%, rgba(255,126,179,0.03) 100%);
   --gradient-stripe-horizontal: linear-gradient(90deg, #635BFF 0%, #80E9FF 100%);
+
+  /* v3: Dennis DNA 따뜻한 그라데이션 (CTA/하이라이트 전용) */
+  --gradient-warm-accent: linear-gradient(135deg, #635BFF 0%, #9B8CFF 40%, #FF9A76 100%);
+  --gradient-warm-subtle: linear-gradient(135deg, rgba(99,91,255,0.08) 0%, rgba(255,154,118,0.06) 100%);
 }
 
 /* ========================================================================
-   4. ANIMATION / EASING / RADIUS
+   4. SPACING TOKENS (v3 신규)
    ======================================================================== */
 
 :root {
-  --ease-stripe: cubic-bezier(0.25, 1, 0.5, 1);
-  --radius-card: 12px;
-  --radius-button: 8px;
-  --radius-input: 8px;
-  --radius-badge: 6px;
-  --radius-sheet: 16px;
-  --radius-progress: 4px;
+  --space-xs: 4px;     /* 인라인 간격 (아이콘-텍스트) */
+  --space-sm: 8px;     /* 소형 간격 */
+  --space-md: 16px;    /* 카드 간격, 페이지 좌우 마진 */
+  --space-lg: 24px;    /* 카드 내부 패딩 (DNA 5) */
+  --space-xl: 32px;    /* 페이지 상단 여백 */
+  --space-2xl: 48px;   /* 대섹션 구분 */
 }
 
 /* ========================================================================
-   5. COMMON ANIMATIONS
+   5. RADIUS TOKENS (v3: 3단계 토큰)
+   ======================================================================== */
+
+:root {
+  --radius-sm: 12px;     /* 태그, 칩, 아이콘 컨테이너 */
+  --radius-md: 16px;     /* 버튼, 입력 필드, 소형 카드 */
+  --radius-lg: 24px;     /* 위젯 카드, 모달, 바텀시트 (DNA 3) */
+  --radius-full: 9999px; /* 아바타, 토글 */
+
+  /* Legacy compat (기존 코드 참조용 — 점진적 제거) */
+  --radius-card: 24px;     /* → --radius-lg 사용 */
+  --radius-button: 16px;   /* → --radius-md 사용 */
+  --radius-input: 16px;    /* → --radius-md 사용 */
+  --radius-badge: 12px;    /* → --radius-sm 사용 */
+  --radius-sheet: 24px;    /* → --radius-lg 사용 */
+  --radius-progress: 12px; /* → --radius-sm 사용 */
+}
+
+/* ========================================================================
+   6. MOTION TOKENS (v3 신규)
+   ======================================================================== */
+
+:root {
+  /* === Duration === */
+  --duration-instant: 100ms;    /* 탭 피드백, 토글 */
+  --duration-fast: 200ms;       /* 작은 전환, hover */
+  --duration-normal: 300ms;     /* 카드 확장, 모달 등장 */
+  --duration-slow: 500ms;       /* 페이지 전환, 축하 */
+
+  /* === Easing === */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);         /* Material standard */
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);  /* 요소 등장 */
+  --ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);    /* 요소 퇴장 */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);      /* 성공/축하 오버슈트 */
+  --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);          /* v2 --ease-stripe 계승 */
+
+  /* Legacy compat */
+  --ease-stripe: cubic-bezier(0.25, 1, 0.5, 1);          /* → --ease-spring 사용 */
+}
+
+/* ========================================================================
+   7. COMMON ANIMATIONS
    ======================================================================== */
 
 @keyframes fadeSlideUp {
@@ -175,7 +213,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-enter {
-  animation: fadeSlideUp 0.3s var(--ease-stripe);
+  animation: fadeSlideUp var(--duration-normal) var(--ease-decelerate);
 }
 
 @keyframes sheetEnter {
@@ -183,7 +221,7 @@
   to { transform: translateY(0); }
 }
 .animate-sheet {
-  animation: sheetEnter 0.4s var(--ease-stripe);
+  animation: sheetEnter 400ms var(--ease-spring);
 }
 
 @keyframes fadeIn {
@@ -191,7 +229,7 @@
   to { opacity: 1; }
 }
 .animate-fade-in {
-  animation: fadeIn 300ms ease-out;
+  animation: fadeIn var(--duration-normal) ease-out;
 }
 
 @keyframes shimmer {
@@ -206,57 +244,13 @@
   );
   background-size: 800px 100%;
   animation: shimmer 2s infinite;
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-sm);
 }
 
-/* 3D 버튼 — Z축 press/hover 효과 */
-.btn-3d {
-  box-shadow: var(--shadow-btn);
-  transform: translateY(0);
-  transition:
-    transform 0.15s var(--ease-stripe),
-    box-shadow 0.15s var(--ease-stripe);
-}
-.btn-3d:hover {
-  box-shadow: var(--shadow-btn-hover);
-  transform: translateY(-2px);
-}
-.btn-3d:active {
-  box-shadow: var(--shadow-btn-active);
-  transform: translateY(2px);
-}
-
-/* 3D 카드 — inset 하이라이트 + hover 떠오름 */
-.card-3d {
-  box-shadow: var(--shadow-card-3d);
-  transform: translateY(0);
-  transition:
-    transform 0.3s var(--ease-stripe),
-    box-shadow 0.3s var(--ease-stripe);
-}
-.card-3d:hover {
-  box-shadow:
-    0 2px 4px hsl(243deg 100% 30% / 0.16),
-    0 8px 16px hsl(243deg 100% 30% / 0.12),
-    0 24px 48px hsl(243deg 100% 30% / 0.10),
-    inset 0 1px 2px rgba(255, 255, 255, 0.6);
-  transform: translateY(-4px);
-}
-
-/* 3D 인풋 — 움푹 파인 느낌 */
-.input-3d {
-  box-shadow: var(--shadow-input-inset);
-}
-.input-3d:focus {
-  box-shadow:
-    var(--shadow-input-inset),
-    var(--shadow-focus);
-}
-
-/* Legacy: 기존 btn-press 호환 유지 */
+/* 버튼 탭 피드백 (v3: 토큰 기반) */
 .btn-press:active {
-  transform: scale(0.98);
-  transition: transform 0.1s ease-out;
+  transform: scale(0.97);
+  transition: transform var(--duration-instant) var(--ease-default);
 }
 
 @keyframes accordion-open {
@@ -264,7 +258,7 @@
   to { opacity: 1; }
 }
 .animate-accordion-open {
-  animation: accordion-open 250ms var(--ease-stripe) forwards;
+  animation: accordion-open 250ms var(--ease-spring) forwards;
 }
 
 /* Stagger children (리스트 순차 등장) */
@@ -275,75 +269,75 @@
 .stagger-child:nth-child(5) { animation-delay: 200ms; }
 .stagger-child:nth-child(6) { animation-delay: 250ms; }
 
-/* Legacy alias (기존 코드 호환) */
+/* Legacy alias */
 .animate-slide-up {
-  animation: sheetEnter 400ms var(--ease-stripe);
+  animation: sheetEnter 400ms var(--ease-spring);
 }
 
 /* ========================================================================
-   6. COMMON STATE PATTERNS
+   8. COMMON STATE PATTERNS
    ======================================================================== */
 
-/* --- Skeleton Loading (목록용) --- */
+/* --- Skeleton Loading --- */
 .skeleton-card {
   background: var(--color-surface-primary);
-  border-radius: var(--radius-card);
-  padding: 24px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
 }
 
 .skeleton-line {
   background: var(--color-surface-secondary);
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-sm);
   height: 16px;
 }
 
 .skeleton-line-short {
   background: var(--color-surface-secondary);
-  border-radius: var(--radius-input);
+  border-radius: var(--radius-sm);
   height: 12px;
   width: 60%;
 }
 
-/* --- Error Banner (인라인 에러) --- */
+/* --- Error Banner --- */
 .error-banner {
   background: var(--color-bg-error);
   border: 1px solid var(--color-action-error);
-  border-radius: var(--radius-card);
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
   color: var(--color-text-error);
 }
 
-/* --- Empty State Container --- */
+/* --- Empty State --- */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: var(--space-2xl) var(--space-lg);
   text-align: center;
   color: var(--color-text-secondary);
 }
 
 .empty-state-icon {
   color: var(--color-text-tertiary);
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 
 .empty-state-title {
   font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .empty-state-description {
   font-size: 15px;
   color: var(--color-text-secondary);
-  margin-bottom: 24px;
+  margin-bottom: var(--space-lg);
 }
 
 /* ========================================================================
-   7. ACCESSIBILITY OVERRIDES
+   9. ACCESSIBILITY OVERRIDES
    ======================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
