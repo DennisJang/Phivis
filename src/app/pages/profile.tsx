@@ -1,14 +1,7 @@
-// profile.tsx — Phase 2-B
+// profile.tsx — Phase 2-B + 연동 5
 //
-// Phase 2-B 변경사항:
-// P1-4: MY 바텀시트 인터랙션 개선 — 클릭한 필드로 자동 스크롤 + 하이라이트
-//       openEditSheet(mode, targetFieldKey) 시그니처 확장
-// P1-5: 바텀시트 애니메이션 animate-slide-up 통일 (이미 적용됨, 확인)
-// P2-7: Privacy Policy / Terms of Service — 임시 알림 (Dennis 결정 필요: 정적 페이지 or 외부 링크)
-// i18n: 하드코딩 텍스트 추가 정리 (Immigration Profile, Subscription, Settings 라벨)
-//
-// 비즈니스 로직 100% 동결: translateField, auto-advance, 저장 전부 원본
-// Dennis 규칙 #1, #26, #32, #34 준수
+// 연동 5 추가: handleSave에서 visa_type 변경 감지 → 각 위젯 Store refresh
+// 기존 비즈니스 로직 100% 동결. 연동 5 블록만 추가.
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -36,6 +29,9 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../stores/useAuthStore";
 import { useDashboardStore } from "../../stores/useDashboardStore";
+import { useDocumentsStore } from "../../stores/useDocumentsStore";
+import { useFirst30Store } from "../../stores/useFirst30Store";
+import { useScanStore } from "../../stores/useScanStore";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n/index";
 import { supabase } from "../../lib/supabase";
@@ -93,7 +89,7 @@ const LANG_DISPLAY: Record<string, string> = {
 
 // ── Immigration Profile 행에서 클릭 시 해당 필드가 core/contextual 어디에 속하는지 매핑 ──
 const FIELD_TO_SHEET: Record<string, { sheet: 'core' | 'contextual'; fieldKey: string }> = {
-  nationality: { sheet: 'core', fieldKey: 'foreign_reg_no' }, // nationality는 온보딩에서만 수정 → core 시트의 첫 필드로
+  nationality: { sheet: 'core', fieldKey: 'foreign_reg_no' },
   visa_type: { sheet: 'core', fieldKey: 'foreign_reg_no' },
   visa_expiry: { sheet: 'core', fieldKey: 'passport_expiry_date' },
   current_workplace: { sheet: 'contextual', fieldKey: 'current_workplace' },
@@ -115,7 +111,6 @@ export function Profile() {
   const [incomeCurrency, setIncomeCurrency] = useState<'KRW' | 'USD'>('KRW');
   const inputRefs = useRef<(HTMLInputElement | HTMLSelectElement | null)[]>([]);
   const [langPickerOpen, setLangPickerOpen] = useState(false);
-  // ★ P1-4: 스크롤 타겟 필드 키
   const [scrollTargetKey, setScrollTargetKey] = useState<string | null>(null);
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -141,7 +136,6 @@ export function Profile() {
     return String(val);
   };
 
-  // ★ P1-4: openEditSheet에 targetFieldKey 파라미터 추가
   const openEditSheet = useCallback((mode: 'core' | 'contextual', targetFieldKey?: string) => {
     if (!userProfile) return;
     const fields = mode === 'core' ? CORE_FIELDS : CONTEXTUAL_FIELDS;
@@ -151,20 +145,17 @@ export function Profile() {
     setEditMode(mode);
     setScrollTargetKey(targetFieldKey ?? null);
 
-    // 타겟 필드의 인덱스를 찾아서 focus
     const targetIndex = targetFieldKey
       ? fields.findIndex((f) => f.key === targetFieldKey)
       : 0;
     setTimeout(() => {
-      // 스크롤 + 포커스
       if (targetFieldKey && fieldRefs.current[targetFieldKey]) {
         fieldRefs.current[targetFieldKey]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       inputRefs.current[targetIndex >= 0 ? targetIndex : 0]?.focus();
-    }, 450); // animate-slide-up 완료 후
+    }, 450);
   }, [userProfile]);
 
-  // ★ P1-4: 하이라이트 3초 후 해제
   useEffect(() => {
     if (scrollTargetKey) {
       const timer = setTimeout(() => setScrollTargetKey(null), 3000);
@@ -195,12 +186,80 @@ export function Profile() {
     if (!userProfile) return;
     setSaving(true);
     try {
+      // ── 연동 5: 변경 전 visa_type 캡처 ──
+      const previousVisaType = userProfile.visa_type;
+
       const updates: Record<string, unknown> = {};
       const fields = editMode === 'core' ? CORE_FIELDS : CONTEXTUAL_FIELDS;
       fields.forEach((f) => { const val = editValues[f.key]; updates[f.key] = f.type === 'number' ? (val ? Number(val) : null) : (val || null); if (f.originalKey && editValues[f.originalKey]) updates[f.originalKey] = editValues[f.originalKey]; });
       if (editMode === 'contextual') updates.income_currency = incomeCurrency;
       await updateProfileField(updates as any);
       setEditMode(null);
+
+      // ── 연동 5: 비자 변경 감지 → 전체 Store refresh ──
+      const newVisaType = (updates.visa_type as string) ?? userProfile.visa_type;
+      if (newVisaType && newVisaType !== previousVisaType) {
+        console.log(`[Profile] Visa changed: ${previousVisaType} → ${newVisaType}. Refreshing all stores.`);
+
+        // settle_events 기록
+        if (user?.id) {
+          await supabase.from('settle_events').insert({
+            user_id: user.id,
+            event_type: 'visa_changed',
+            event_data: { previous: previousVisaType, new: newVisaType },
+            source_widget: 'my',
+          });
+        }
+
+        // 기존 active intent 비활성화
+        if (user?.id) {
+          await supabase
+            .from('visa_intents')
+            .update({ is_active: false, updated_at: new Date().toISOString() })
+            .eq('user_id', user.id)
+            .eq('is_active', true);
+        }
+
+        // 각 위젯 Store refresh
+        const docsStore = useDocumentsStore.getState();
+        docsStore.reset();
+        await docsStore.loadCivilTypes(newVisaType);
+
+        await useFirst30Store.getState().fetchFlow();
+
+        useScanStore.getState().reset();
+      }
+
+      // ── 연동 5: 주소 변경 감지 → 마감일 등록 ──
+      const newAddress = updates.address_korea as string | undefined;
+      if (newAddress && newAddress !== userProfile.address_korea && user?.id) {
+        console.log('[Profile] Address changed. Adding 전입신고 deadline.');
+
+        // 체류지 변경 신고 마감일 (D+14)
+        const deadlineDate = new Date();
+        deadlineDate.setDate(deadlineDate.getDate() + 14);
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/score-deadlines`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'add',
+                title_key: '전입신고',
+                deadline_date: deadlineDate.toISOString().split('T')[0],
+                source_widget: 'my',
+              }),
+            }
+          );
+        }
+      }
     } catch (err) { console.error('[Profile] save error:', err); }
     finally { setSaving(false); }
   };
@@ -218,7 +277,6 @@ export function Profile() {
 
   const currentLangDisplay = LANG_DISPLAY[i18n.language] ?? LANG_DISPLAY['en'];
 
-  // ── Immigration Profile 행 데이터 — ★ P1-4: 각 행에 targetField 매핑 ──
   const immigrationRows = [
     { label: 'Nationality', value: getFieldDisplay('nationality'), sheet: 'core' as const, targetField: undefined },
     { label: 'Visa Type', value: visaType ?? 'Not set', sheet: 'core' as const, targetField: undefined },
@@ -226,10 +284,6 @@ export function Profile() {
     { label: 'Workplace', value: getFieldDisplay('current_workplace'), sheet: 'contextual' as const, targetField: 'current_workplace' },
     { label: 'TOPIK Level', value: 'Not set', sheet: 'contextual' as const, targetField: 'occupation' },
   ];
-
-  // ═══════════════════════════════════════
-  // RENDER
-  // ═══════════════════════════════════════
 
   return (
     <div
@@ -304,7 +358,7 @@ export function Profile() {
           </div>
         </div>
 
-        {/* Immigration Profile — ★ P1-4: 각 행에 targetField 전달 */}
+        {/* Immigration Profile */}
         <div
           className="rounded-3xl divide-y"
           style={{
@@ -392,7 +446,7 @@ export function Profile() {
           )}
         </div>
 
-        {/* Settings — ★ P2-7: Privacy/ToS에 임시 알림 연결 */}
+        {/* Settings */}
         <div
           className="rounded-3xl divide-y"
           style={{
@@ -442,7 +496,7 @@ export function Profile() {
         </button>
       </div>
 
-      {/* Edit Sheet — ★ P1-4: 스크롤 타겟 하이라이트 추가 */}
+      {/* Edit Sheet */}
       {editMode && (
         <div
           className="fixed inset-0 z-50 backdrop-blur-sm flex items-end justify-center"
@@ -473,7 +527,6 @@ export function Profile() {
                   ref={(el) => { fieldRefs.current[field.key] = el; }}
                   className="rounded-2xl p-3 transition-all duration-500"
                   style={{
-                    // ★ P1-4: 타겟 필드 하이라이트
                     backgroundColor: scrollTargetKey === field.key
                       ? "color-mix(in srgb, var(--color-action-primary) 8%, transparent)"
                       : "transparent",
@@ -574,7 +627,7 @@ export function Profile() {
         </div>
       )}
 
-      {/* 언어 선택 바텀시트 — 동결 (overlay 클릭으로 닫기 추가) */}
+      {/* 언어 선택 바텀시트 */}
       {langPickerOpen && (
         <div
           className="fixed inset-0 z-50 backdrop-blur-sm flex items-end justify-center"
