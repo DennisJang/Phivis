@@ -106,7 +106,7 @@ export function Profile() {
   const { t: tc } = useTranslation('common');
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
-  const { userProfile, visaTracker, loading, hydrate, reset, updateProfileField } = useDashboardStore();
+  const { userProfile, loading, hydrate, reset, updateProfileField } = useDashboardStore();
 
   const [editMode, setEditMode] = useState<'core' | 'contextual' | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
@@ -123,7 +123,7 @@ export function Profile() {
   useEffect(() => { if (userProfile?.income_currency) setIncomeCurrency(userProfile.income_currency as 'KRW' | 'USD'); }, [userProfile?.income_currency]);
 
   const displayName = userProfile?.full_name || user?.user_metadata?.full_name || 'User';
-  const visaType = visaTracker?.visa_type ?? userProfile?.visa_type ?? null;
+  const visaType = userProfile?.visa_type ?? null;
   const memberSince = userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '';
   const subscriptionLabel = userProfile?.subscription_plan === 'premium' ? 'Premium' : 'Free';
   const coreCompletion = userProfile ? [userProfile.foreign_reg_no, userProfile.passport_no, userProfile.address_korea, userProfile.date_of_birth].filter(Boolean).length : 0;
@@ -224,7 +224,7 @@ export function Profile() {
     { label: 'Visa Type', value: visaType ?? 'Not set', sheet: 'core' as const, targetField: undefined },
     { label: 'Visa Expiry', value: userProfile?.visa_expiry ? new Date(userProfile.visa_expiry).toLocaleDateString('ko-KR') : 'Not set', sheet: 'core' as const, targetField: 'passport_expiry_date' },
     { label: 'Workplace', value: getFieldDisplay('current_workplace'), sheet: 'contextual' as const, targetField: 'current_workplace' },
-    { label: 'TOPIK Level', value: visaTracker?.korean_score ? `Level ${Math.floor(visaTracker.korean_score / 20)}` : 'Not set', sheet: 'contextual' as const, targetField: 'occupation' },
+    { label: 'TOPIK Level', value: 'Not set', sheet: 'contextual' as const, targetField: 'occupation' },
   ];
 
   // ═══════════════════════════════════════
