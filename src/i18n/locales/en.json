@@ -43,6 +43,12 @@
       "formats": "PDF, JPG, PNG, WebP · Max 10MB",
       "cameraComingSoon": "Camera scan coming soon"
     },
+    "empty": {
+    "title": "Couldn't recognize the document",
+    "description": "Try again with a clearer photo. Make sure the text is readable and the entire document is visible.",
+    "noCountCharge": "This scan won't count toward your limit.",
+    "tryAgain": "Try again"
+    },
     "progress": {
       "validating": "Checking file...",
       "uploading": "Reading document...",
@@ -70,7 +76,8 @@
       "analysisFailed": "Could not analyze this document. Please try again.",
       "networkError": "Connection error. Please check your internet and try again.",
       "goBack": "Go back",
-      "retry": "Try again"
+      "retry": "Try again",
+      "noCountCharge": "This scan won't count toward your limit."
     }
   },
   "home": {

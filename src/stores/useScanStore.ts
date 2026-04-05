@@ -1,8 +1,9 @@
 // src/stores/useScanStore.ts
 // ============================================
-// Scan 위젯 상태 머신 — Sprint 1
+// Scan 위젯 상태 머신 — Phase A 완성
 //
 // States: idle → validating → uploading → analyzing → result | error
+// 신규: Supabase Storage 원본 저장 (병렬), status 필드, 실패 시 횟수 무효
 // 규칙 #1: 원본 확인 — scan-analyze EF 스펙 기반
 // 규칙 #34: i18n 키만 (하드코딩 텍스트 금지)
 // 규칙 #39: "대행" 표현 금지
@@ -20,6 +21,9 @@ export type ScanState =
   | 'analyzing'
   | 'result'
   | 'error';
+
+// 스캔 결과 상태: 횟수 카운트는 success만
+export type ScanStatus = 'success' | 'failed' | 'error';
 
 export interface ScanKeyNumber {
   label: string;
@@ -54,6 +58,7 @@ export interface ScanResult {
   scan_id: string | null;
   category: string;
   category_confidence: number;
+  status: ScanStatus;
   summary: {
     title: string;
     subtitle: string;
@@ -65,6 +70,7 @@ export interface ScanResult {
   deadlines: ScanDeadline[];
   disclaimer: string;
   tokens_used: number | null;
+  raw_file_url: string | null;
 }
 
 // 허용 파일 타입
@@ -77,6 +83,9 @@ const ALLOWED_TYPES = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+// Storage 버킷명
+const STORAGE_BUCKET = 'scan-uploads';
+
 // ─── Store ───
 
 interface ScanStore {
@@ -84,9 +93,10 @@ interface ScanStore {
   state: ScanState;
   file: File | null;
   filePreviewUrl: string | null;
+  storageUrl: string | null;
   result: ScanResult | null;
   error: string | null; // i18n key
-  progress: number; // 0-100 (uploading + analyzing 단계 표시용)
+  progress: number; // 0-100
 
   // Actions
   selectFile: (file: File) => void;
@@ -101,6 +111,7 @@ export const useScanStore = create<ScanStore>((set, get) => ({
   state: 'idle',
   file: null,
   filePreviewUrl: null,
+  storageUrl: null,
   result: null,
   error: null,
   progress: 0,
@@ -111,23 +122,17 @@ export const useScanStore = create<ScanStore>((set, get) => ({
     const prevUrl = get().filePreviewUrl;
     if (prevUrl) URL.revokeObjectURL(prevUrl);
 
-    set({ state: 'validating', file, error: null, result: null, progress: 0 });
+    set({ state: 'validating', file, error: null, result: null, progress: 0, storageUrl: null });
 
     // Validate type
     if (!ALLOWED_TYPES.includes(file.type as typeof ALLOWED_TYPES[number])) {
-      set({
-        state: 'error',
-        error: 'scan:error.unsupportedType',
-      });
+      set({ state: 'error', error: 'scan:error.unsupportedType' });
       return;
     }
 
     // Validate size
     if (file.size > MAX_FILE_SIZE) {
-      set({
-        state: 'error',
-        error: 'scan:error.fileTooLarge',
-      });
+      set({ state: 'error', error: 'scan:error.fileTooLarge' });
       return;
     }
 
@@ -136,10 +141,7 @@ export const useScanStore = create<ScanStore>((set, get) => ({
       ? URL.createObjectURL(file)
       : null;
 
-    set({
-      state: 'uploading',
-      filePreviewUrl: previewUrl,
-    });
+    set({ state: 'uploading', filePreviewUrl: previewUrl });
 
     // Auto-trigger analyze
     get().analyze();
@@ -154,11 +156,35 @@ export const useScanStore = create<ScanStore>((set, get) => ({
     }
 
     try {
-      // ── Phase 1: Base64 인코딩 ──
-      set({ state: 'uploading', progress: 20 });
+      // ── Auth check ──
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        set({ state: 'error', error: 'scan:error.notAuthenticated' });
+        return;
+      }
 
-      const base64 = await fileToBase64(file);
+      set({ state: 'uploading', progress: 10 });
+
+      // ── Phase 1: Storage 업로드 + Base64 인코딩 (병렬) ──
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${session.user.id}/${timestamp}_${safeName}`;
+
+      const [storageResult, base64] = await Promise.all([
+        uploadToStorage(file, storagePath),
+        fileToBase64(file),
+      ]);
+
       set({ progress: 40 });
+
+      // Storage 실패는 치명적이지 않음 — 분석은 계속 진행
+      // 단, URL을 기록해서 EF에 전달
+      const storageUrl = storageResult.url;
+      set({ storageUrl });
+
+      if (storageResult.error) {
+        console.warn('[useScanStore] Storage upload failed, continuing with analysis:', storageResult.error);
+      }
 
       // file_type 결정
       const fileType = file.type === 'application/pdf' ? 'pdf'
@@ -168,14 +194,6 @@ export const useScanStore = create<ScanStore>((set, get) => ({
 
       // ── Phase 2: API 호출 ──
       set({ state: 'analyzing', progress: 50 });
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        set({ state: 'error', error: 'scan:error.notAuthenticated' });
-        return;
-      }
-
-      set({ progress: 60 });
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-analyze`,
@@ -189,6 +207,7 @@ export const useScanStore = create<ScanStore>((set, get) => ({
           body: JSON.stringify({
             image_base64: base64,
             file_type: fileType,
+            file_url: storageUrl, // Storage URL 전달 → EF가 raw_file_url에 저장
           }),
         }
       );
@@ -198,7 +217,6 @@ export const useScanStore = create<ScanStore>((set, get) => ({
       const data = await response.json();
 
       if (!response.ok) {
-        // EF에서 반환한 에러
         const errorMsg = data.error || 'scan:error.analysisFailed';
         set({ state: 'error', error: errorMsg, progress: 0 });
         return;
@@ -209,7 +227,13 @@ export const useScanStore = create<ScanStore>((set, get) => ({
         return;
       }
 
-      // ── Phase 3: 결과 저장 ──
+      // ── Phase 3: 결과 판정 ──
+      const items = data.items ?? [];
+      const hasContent = items.length > 0;
+
+      // items가 0개면 = 인식 실패 → status='failed', 횟수 무효
+      const status: ScanStatus = hasContent ? 'success' : 'failed';
+
       set({
         state: 'result',
         progress: 100,
@@ -217,15 +241,25 @@ export const useScanStore = create<ScanStore>((set, get) => ({
           scan_id: data.scan_id,
           category: data.category,
           category_confidence: data.category_confidence,
+          status,
           summary: data.summary,
-          items: data.items ?? [],
+          items,
           linked_widget: data.linked_widget,
           linked_data: data.linked_data,
           deadlines: data.deadlines ?? [],
           disclaimer: data.disclaimer,
           tokens_used: data.tokens_used,
+          raw_file_url: storageUrl,
         },
       });
+
+      // 실패 시 DB의 status도 업데이트
+      if (status === 'failed' && data.scan_id) {
+        await supabase
+          .from('scan_results')
+          .update({ status: 'failed' })
+          .eq('id', data.scan_id);
+      }
     } catch (err) {
       console.error('[useScanStore] analyze error:', err);
       set({
@@ -245,6 +279,7 @@ export const useScanStore = create<ScanStore>((set, get) => ({
       state: 'idle',
       file: null,
       filePreviewUrl: null,
+      storageUrl: null,
       result: null,
       error: null,
       progress: 0,
@@ -253,11 +288,7 @@ export const useScanStore = create<ScanStore>((set, get) => ({
 
   // ── retry: error → idle ──
   retry: () => {
-    set({
-      state: 'idle',
-      error: null,
-      progress: 0,
-    });
+    set({ state: 'idle', error: null, progress: 0 });
   },
 
   // ── clearError ──
@@ -273,7 +304,6 @@ function fileToBase64(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      // data:image/jpeg;base64,XXXX → XXXX 부분만 추출
       const base64 = result.split(',')[1];
       if (!base64) {
         reject(new Error('Failed to encode file'));
@@ -284,4 +314,35 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Supabase Storage에 파일 업로드
+ * 실패해도 분석은 계속 — 에러를 삼키고 null URL 반환
+ */
+async function uploadToStorage(
+  file: File,
+  path: string
+): Promise<{ url: string | null; error: string | null }> {
+  try {
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      return { url: null, error: error.message };
+    }
+
+    // public URL 생성
+    const { data: urlData } = supabase.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(data.path);
+
+    return { url: urlData.publicUrl, error: null };
+  } catch (err) {
+    return { url: null, error: (err as Error).message };
+  }
 }

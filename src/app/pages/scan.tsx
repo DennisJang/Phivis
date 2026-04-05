@@ -1,7 +1,8 @@
 // src/app/pages/scan.tsx
 // ============================================
-// Scan 위젯 페이지 — Sprint 1 코드 골격
+// Scan 위젯 페이지 — Phase A 완성
 //
+// 신규: 빈 결과 상태(EmptyResult), 실패 시 횟수 무효 메시지, comparison null 방어
 // 상태 머신 기반 렌더링: idle → validating → uploading → analyzing → result → error
 // 규칙 #32: 컬러 하드코딩 금지 → 시맨틱 토큰
 // 규칙 #34: i18n 전 페이지
@@ -13,7 +14,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
-import { Upload, FileText, Camera, AlertCircle, ChevronDown, ChevronUp, RotateCcw, ArrowRight } from 'lucide-react';
+import { Upload, FileText, Camera, AlertCircle, ChevronDown, ChevronUp, RotateCcw, ArrowRight, FileQuestion } from 'lucide-react';
 import { useScanStore } from '../../stores/useScanStore';
 import type { ScanItem } from '../../stores/useScanStore';
 
@@ -146,7 +147,7 @@ function ScanUpload() {
         />
       </div>
 
-      {/* Camera button — Sprint 2에서 활성화 */}
+      {/* Camera button — Phase E에서 활성화 */}
       <button
         className="w-full mt-[var(--space-md)] py-[14px] rounded-[var(--radius-md)] text-[16px] font-semibold flex items-center justify-center gap-[var(--space-sm)] opacity-40 cursor-not-allowed"
         style={{
@@ -235,6 +236,11 @@ function ScanResult() {
 
   if (!result) return null;
 
+  // 인식 실패 (items 0개) → 빈 상태 화면
+  if (result.status === 'failed' || result.items.length === 0) {
+    return <ScanEmptyResult />;
+  }
+
   const catConfig = CATEGORY_CONFIG[result.category] ?? CATEGORY_CONFIG.general;
 
   return (
@@ -274,8 +280,8 @@ function ScanResult() {
           {result.summary.subtitle}
         </p>
 
-        {/* Key numbers */}
-        {result.summary.key_numbers.length > 0 && (
+        {/* Key numbers — null/empty 방어 */}
+        {result.summary.key_numbers && result.summary.key_numbers.length > 0 && (
           <div className="flex flex-wrap gap-[var(--space-md)]">
             {result.summary.key_numbers.map((kn, i) => (
               <div key={i}>
@@ -303,7 +309,7 @@ function ScanResult() {
       ))}
 
       {/* Deadlines */}
-      {result.deadlines.length > 0 && (
+      {result.deadlines && result.deadlines.length > 0 && (
         <div
           className="rounded-[var(--radius-lg)] p-[var(--space-lg)]"
           style={{
@@ -372,7 +378,7 @@ function ScanResult() {
           {t('result.scanAgain')}
         </button>
 
-        {/* Widget CTA — Sprint 3에서 실제 네비게이션 연결 */}
+        {/* Widget CTA — Phase E에서 실제 네비게이션 연결 */}
         {result.linked_widget && (
           <button
             className="flex-1 py-[14px] rounded-[var(--radius-md)] text-[16px] font-semibold flex items-center justify-center gap-[var(--space-xs)]"
@@ -381,8 +387,7 @@ function ScanResult() {
               color: 'var(--color-text-on-color)',
             }}
             onClick={() => {
-              // Sprint 3: navigate to linked widget
-              // For now, show toast or no-op
+              // Phase E: navigate to linked widget
             }}
           >
             {t('result.viewDetails')}
@@ -390,6 +395,66 @@ function ScanResult() {
           </button>
         )}
       </div>
+    </motion.div>
+  );
+}
+
+// ─── 빈 결과 상태 (인식 실패, 횟수 무효) ───
+function ScanEmptyResult() {
+  const { t } = useTranslation('scan');
+  const { reset } = useScanStore();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.3, ease: [0.05, 0.7, 0.1, 1.0] }}
+      className="rounded-[var(--radius-lg)] p-[var(--space-2xl)] text-center"
+      style={{
+        backgroundColor: 'var(--color-surface-primary)',
+        boxShadow: 'var(--shadow-card-soft)',
+      }}
+    >
+      <FileQuestion
+        size={48}
+        className="mx-auto mb-[var(--space-md)]"
+        style={{ color: 'var(--color-icon-secondary)' }}
+      />
+
+      <h3
+        className="text-[18px] font-semibold mb-[var(--space-xs)]"
+        style={{ color: 'var(--color-text-primary)' }}
+      >
+        {t('empty.title')}
+      </h3>
+
+      <p
+        className="text-[14px] mb-[var(--space-sm)]"
+        style={{ color: 'var(--color-text-secondary)' }}
+      >
+        {t('empty.description')}
+      </p>
+
+      {/* 횟수 무효 안내 */}
+      <p
+        className="text-[13px] mb-[var(--space-lg)]"
+        style={{ color: 'var(--color-text-tertiary)' }}
+      >
+        {t('empty.noCountCharge')}
+      </p>
+
+      <button
+        onClick={reset}
+        className="w-full py-[14px] rounded-[var(--radius-md)] text-[16px] font-semibold flex items-center justify-center gap-[var(--space-xs)]"
+        style={{
+          backgroundColor: 'var(--color-action-primary)',
+          color: 'var(--color-text-on-color)',
+        }}
+      >
+        <RotateCcw size={20} />
+        {t('empty.tryAgain')}
+      </button>
     </motion.div>
   );
 }
@@ -429,7 +494,7 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
               </span>
             )}
           </p>
-          {item.amount !== null && (
+          {item.amount !== null && item.amount !== undefined && (
             <p
               className="text-[20px] font-bold mt-[2px]"
               style={{ color: 'var(--color-text-primary)' }}
@@ -460,15 +525,17 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
               style={{ borderTop: '1px solid var(--color-border-default)' }}
             >
               {/* Explanation */}
-              <p
-                className="text-[14px] pt-[var(--space-md)]"
-                style={{ color: 'var(--color-text-secondary)' }}
-              >
-                {item.explanation}
-              </p>
+              {item.explanation && (
+                <p
+                  className="text-[14px] pt-[var(--space-md)]"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                >
+                  {item.explanation}
+                </p>
+              )}
 
-              {/* Comparison bar */}
-              {item.comparison && (
+              {/* Comparison bar — comparison이 null이면 렌더링하지 않음 */}
+              {item.comparison && item.comparison.user_value && item.comparison.reference_value && (
                 <div
                   className="flex items-center justify-between text-[13px] p-[var(--space-sm)] rounded-[var(--radius-sm)]"
                   style={{ backgroundColor: 'var(--color-surface-secondary)' }}
@@ -482,13 +549,13 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
                 </div>
               )}
 
-              {/* Widget link — Sprint 3 */}
+              {/* Widget link — Phase E */}
               {item.action_text && (
                 <button
                   className="text-[14px] font-medium flex items-center gap-[var(--space-xs)]"
                   style={{ color: 'var(--color-action-primary)' }}
                   onClick={() => {
-                    // Sprint 3: navigate to linked widget
+                    // Phase E: navigate to linked widget
                   }}
                 >
                   {item.action_text}
@@ -527,10 +594,18 @@ function ScanError() {
       />
 
       <p
-        className="text-[15px] mb-[var(--space-lg)]"
+        className="text-[15px] mb-[var(--space-sm)]"
         style={{ color: 'var(--color-text-secondary)' }}
       >
         {error?.startsWith('scan:') ? t(error.replace('scan:', '')) : error}
+      </p>
+
+      {/* 에러 = 횟수 무효 안내 */}
+      <p
+        className="text-[13px] mb-[var(--space-lg)]"
+        style={{ color: 'var(--color-text-tertiary)' }}
+      >
+        {t('error.noCountCharge')}
       </p>
 
       <div className="flex gap-[var(--space-sm)]">

@@ -43,6 +43,12 @@
       "formats": "PDF, JPG, PNG, WebP · 最大10MB",
       "cameraComingSoon": "相机扫描即将推出"
     },
+    "empty": {
+    "title": "无法识别该文档",
+    "description": "请用更清晰的照片重试。确保文字清晰可读且整个文档完整可见。",
+    "noCountCharge": "此次扫描不会计入您的次数限制。",
+    "tryAgain": "重试"
+    },
     "progress": {
       "validating": "正在检查文件...",
       "uploading": "正在读取文件...",
@@ -70,7 +76,8 @@
       "analysisFailed": "无法分析此文件。请重试。",
       "networkError": "连接错误。请检查网络连接后重试。",
       "goBack": "返回",
-      "retry": "重试"
+      "retry": "重试",
+      "noCountCharge": "此次扫描不会计入您的次数限制。"
     }
   },
   "home": {

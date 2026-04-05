@@ -47,6 +47,12 @@
       "formats": "PDF, JPG, PNG, WebP · 최대 10MB",
       "cameraComingSoon": "카메라 스캔 준비 중"
     },
+    "empty": {
+    "title": "문서를 인식하지 못했어요",
+    "description": "문서가 잘 보이는 사진으로 다시 시도해보세요. 글씨가 선명하고 전체가 나와야 정확하게 분석할 수 있어요.",
+    "noCountCharge": "이 스캔은 횟수에 포함되지 않아요.",
+    "tryAgain": "다시 시도하기"
+    },
     "progress": {
       "validating": "파일 확인 중...",
       "uploading": "문서를 읽고 있어요...",
@@ -74,7 +80,8 @@
       "analysisFailed": "문서 분석에 실패했습니다. 다시 시도해주세요.",
       "networkError": "연결 오류입니다. 인터넷 연결을 확인하고 다시 시도해주세요.",
       "goBack": "돌아가기",
-      "retry": "다시 시도"
+      "retry": "다시 시도",
+       "noCountCharge": "이 스캔은 횟수에 포함되지 않아요."
     }
   },
   "home": {

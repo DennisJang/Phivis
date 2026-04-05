@@ -47,6 +47,12 @@
       "formats": "PDF, JPG, PNG, WebP · Tối đa 10MB",
       "cameraComingSoon": "Quét bằng camera sắp ra mắt"
     },
+    "empty": {
+    "title": "Không thể nhận dạng tài liệu",
+    "description": "Hãy thử lại với ảnh rõ ràng hơn. Đảm bảo chữ đọc được và toàn bộ tài liệu hiển thị đầy đủ.",
+    "noCountCharge": "Lần quét này không tính vào giới hạn của bạn.",
+    "tryAgain": "Thử lại"
+    },
     "progress": {
       "validating": "Đang kiểm tra tệp...",
       "uploading": "Đang đọc tài liệu...",
@@ -74,7 +80,8 @@
       "analysisFailed": "Không thể phân tích tài liệu. Vui lòng thử lại.",
       "networkError": "Lỗi kết nối. Vui lòng kiểm tra internet và thử lại.",
       "goBack": "Quay lại",
-      "retry": "Thử lại"
+      "retry": "Thử lại",
+      "noCountCharge": "Lần quét này không tính vào giới hạn của bạn."
     }
   },
   "home": {
