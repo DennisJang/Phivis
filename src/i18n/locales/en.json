@@ -44,17 +44,17 @@
       "cameraComingSoon": "Camera scan coming soon"
     },
     "empty": {
-    "title": "Couldn't recognize the document",
-    "description": "Try again with a clearer photo. Make sure the text is readable and the entire document is visible.",
-    "noCountCharge": "This scan won't count toward your limit.",
-    "tryAgain": "Try again"
+      "title": "Couldn't recognize the document",
+      "description": "Try again with a clearer photo. Make sure the text is readable and the entire document is visible.",
+      "noCountCharge": "This scan won't count toward your limit.",
+      "tryAgain": "Try again"
     },
     "limit": {
-    "remaining": "{{count}}/{{total}} scans left this month",
-    "title": "You've used all free scans this month",
-    "description": "Upgrade to Premium for unlimited document scanning.",
-    "upgrade": "Start Premium",
-    "goBack": "Go back"
+      "remaining": "{{count}}/{{total}} scans left this month",
+      "title": "You've used all free scans this month",
+      "description": "Upgrade to Premium for unlimited document scanning.",
+      "upgrade": "Start Premium",
+      "goBack": "Go back"
     },
     "progress": {
       "validating": "Checking file...",
@@ -480,5 +480,164 @@
     "lang_en": "English",
     "lang_vi": "Tiếng Việt",
     "lang_zh": "中文"
+  },
+  "lab": {
+    "title": "Lab",
+    "subtitle": "Your vote decides what Phivis builds next.",
+    "disclaimer": "Lab results are a reference for Phivis development and do not guarantee specific feature releases.",
+    "tab": {
+      "vote": "Vote",
+      "suggest": "Suggest",
+      "results": "Results",
+      "features": "Status"
+    },
+    "category": {
+      "visa_admin": "Visa/Admin",
+      "finance_money": "Money/Finance",
+      "housing": "Housing",
+      "health_medical": "Health/Medical",
+      "work_employment": "Work/Jobs",
+      "life_culture": "Life/Culture",
+      "other": "Other"
+    },
+    "vote": {
+      "question": "What features do you need most this month?",
+      "selected": "{{count}}/{{max}} selected",
+      "votes": "{{count}} votes",
+      "totalVoters": "{{count}} participants",
+      "submit": "Vote",
+      "updateVote": "Update vote",
+      "alreadyVoted": "You've already voted this month. You can change your selection."
+    },
+    "suggest": {
+      "question": "What feature do you need?",
+      "hint": "Write in your native language. AI will translate and classify.",
+      "placeholder": "e.g., Which hospitals speak Vietnamese?",
+      "submit": "Submit",
+      "success": "Your suggestion has been submitted!",
+      "classified": "Classified as",
+      "translated": "Translated",
+      "limitReached": "Free users can submit 1 suggestion per month."
+    },
+    "results": {
+      "title": "{{period}} Results",
+      "totalVoters": "{{count}} participants",
+      "empty": "No votes yet."
+    },
+    "features": {
+      "empty": "No feature requests registered.",
+      "greenTitle": "Available now",
+      "amberTitle": "Legal pathway in progress",
+      "redTitle": "Structural limitation",
+      "votes": "votes"
+    }
+  },
+  "first30": {
+    "title": "First 30 Days",
+    "subtitle": "Know the order, lose the fear",
+    "loading": "Loading...",
+    "disclaimer": "This guide is general information and may vary by individual circumstances.",
+    "emergency": "Emergency 119",
+    "documents": "What you need",
+    "recommendedBank": "Recommended bank",
+    "recommendedPhone": "Recommended plan",
+    "markDone": "Done",
+    "skip": "Skip",
+    "waiting": "~{{days}} days",
+    "layer": {
+      "land": {
+        "title": "🛬 Land",
+        "subtitle": "Physically be in Korea"
+      },
+      "identity": {
+        "title": "🪪 Identity",
+        "subtitle": "Legally exist"
+      },
+      "connect": {
+        "title": "🔗 Connect",
+        "subtitle": "Digitally exist"
+      },
+      "protect": {
+        "title": "🛡️ Protect",
+        "subtitle": "Be institutionally protected"
+      },
+      "settle": {
+        "title": "🌱 Settle",
+        "subtitle": "Go deeper with Phivis"
+      }
+    },
+    "step": {
+      "airport_arrival": {
+        "title": "Airport arrival",
+        "desc": "What to do after immigration",
+        "emotion": "You made it! Take it one step at a time."
+      },
+      "temp_housing": {
+        "title": "Temporary housing",
+        "desc": "Secure your first night"
+      },
+      "prepaid_sim": {
+        "title": "Prepaid SIM",
+        "desc": "Buy at airport convenience store or carrier booth"
+      },
+      "arc_apply": {
+        "title": "Apply for ARC",
+        "desc": "Apply at immigration within 90 days of arrival",
+        "caution": "Fine if not applied within 90 days",
+        "emotion": "This is the most important step. Once done, everything else unlocks."
+      },
+      "arc_waiting": {
+        "title": "Waiting for ARC",
+        "desc": "2-4 weeks after application. There are things you can prepare during this time.",
+        "emotion": "Frustrating? That's normal. Korea requires ARC for almost everything. But if you prepare now, you can jump to the next step the day you get it."
+      },
+      "arc_received": {
+        "title": "ARC received",
+        "desc": "Pick up at immigration. Now bank, phone, insurance are possible!",
+        "emotion": "Congratulations! You can now fully participate in Korean life."
+      },
+      "bank_open": {
+        "title": "Open bank account",
+        "desc": "ARC + passport to open an account",
+        "caution": "Visit a branch with a foreign customer desk",
+        "emotion": "You might get rejected. That's normal. Try a different branch."
+      },
+      "postpaid_phone": {
+        "title": "Postpaid phone plan",
+        "desc": "ARC + bank account needed for postpaid"
+      },
+      "essential_apps": {
+        "title": "Essential apps",
+        "desc": "KakaoTalk, Naver Map, Papago, T-money"
+      },
+      "health_insurance": {
+        "title": "Health insurance",
+        "desc": "Enrollment method varies by visa type",
+        "caution": "Non-enrollment may affect visa renewal"
+      },
+      "four_insurances": {
+        "title": "4 major insurances",
+        "desc": "National pension, health, employment, industrial accident"
+      },
+      "address_register": {
+        "title": "Address registration",
+        "desc": "Report at community center within 14 days of moving",
+        "caution": "Fine if not reported within 14 days",
+        "emotion": "Bring your lease contract. Get a confirmed date stamp to protect your deposit."
+      },
+      "first_payslip": {
+        "title": "Check first payslip",
+        "desc": "Scan your payslip with Phivis Scan"
+      },
+      "housing_stable": {
+        "title": "Housing stability",
+        "desc": "Check your contract in Documents"
+      },
+      "phivis_score": {
+        "title": "Check Phivis Score",
+        "desc": "See your settlement stability at a glance",
+        "emotion": "It's been a month. Look how far you've come."
+      }
+    }
   }
 }

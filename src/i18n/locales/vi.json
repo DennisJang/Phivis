@@ -48,17 +48,17 @@
       "cameraComingSoon": "Quét bằng camera sắp ra mắt"
     },
     "empty": {
-    "title": "Không thể nhận dạng tài liệu",
-    "description": "Hãy thử lại với ảnh rõ ràng hơn. Đảm bảo chữ đọc được và toàn bộ tài liệu hiển thị đầy đủ.",
-    "noCountCharge": "Lần quét này không tính vào giới hạn của bạn.",
-    "tryAgain": "Thử lại"
+      "title": "Không thể nhận dạng tài liệu",
+      "description": "Hãy thử lại với ảnh rõ ràng hơn. Đảm bảo chữ đọc được và toàn bộ tài liệu hiển thị đầy đủ.",
+      "noCountCharge": "Lần quét này không tính vào giới hạn của bạn.",
+      "tryAgain": "Thử lại"
     },
     "limit": {
-    "remaining": "Còn {{count}}/{{total}} lần quét trong tháng",
-    "title": "Bạn đã dùng hết lượt quét miễn phí tháng này",
-    "description": "Nâng cấp lên Premium để quét tài liệu không giới hạn.",
-    "upgrade": "Bắt đầu Premium",
-    "goBack": "Quay lại"
+      "remaining": "Còn {{count}}/{{total}} lần quét trong tháng",
+      "title": "Bạn đã dùng hết lượt quét miễn phí tháng này",
+      "description": "Nâng cấp lên Premium để quét tài liệu không giới hạn.",
+      "upgrade": "Bắt đầu Premium",
+      "goBack": "Quay lại"
     },
     "progress": {
       "validating": "Đang kiểm tra tệp...",
@@ -484,5 +484,164 @@
     "lang_en": "English",
     "lang_vi": "Tiếng Việt",
     "lang_zh": "中文"
+  },
+  "lab": {
+    "title": "Lab",
+    "subtitle": "Phiếu bầu của bạn quyết định tính năng tiếp theo của Phivis.",
+    "disclaimer": "Kết quả Lab là tài liệu tham khảo cho phát triển Phivis và không đảm bảo phát hành tính năng cụ thể.",
+    "tab": {
+      "vote": "Bình chọn",
+      "suggest": "Đề xuất",
+      "results": "Kết quả",
+      "features": "Trạng thái"
+    },
+    "category": {
+      "visa_admin": "Visa/Hành chính",
+      "finance_money": "Tài chính",
+      "housing": "Nhà ở",
+      "health_medical": "Sức khỏe/Y tế",
+      "work_employment": "Việc làm",
+      "life_culture": "Cuộc sống/Văn hóa",
+      "other": "Khác"
+    },
+    "vote": {
+      "question": "Tháng này bạn cần tính năng nào nhất?",
+      "selected": "Đã chọn {{count}}/{{max}}",
+      "votes": "{{count}} phiếu",
+      "totalVoters": "{{count}} người tham gia",
+      "submit": "Bình chọn",
+      "updateVote": "Cập nhật bình chọn",
+      "alreadyVoted": "Bạn đã bình chọn tháng này. Bạn có thể thay đổi lựa chọn."
+    },
+    "suggest": {
+      "question": "Bạn cần tính năng gì?",
+      "hint": "Viết bằng tiếng mẹ đẻ. AI sẽ dịch và phân loại.",
+      "placeholder": "Ví dụ: Bệnh viện nào nói tiếng Việt?",
+      "submit": "Gửi",
+      "success": "Đề xuất đã được ghi nhận!",
+      "classified": "Phân loại",
+      "translated": "Dịch",
+      "limitReached": "Người dùng miễn phí chỉ gửi được 1 đề xuất/tháng."
+    },
+    "results": {
+      "title": "Kết quả {{period}}",
+      "totalVoters": "{{count}} người tham gia",
+      "empty": "Chưa có bình chọn."
+    },
+    "features": {
+      "empty": "Chưa có yêu cầu tính năng.",
+      "greenTitle": "Hiện có sẵn",
+      "amberTitle": "Đang mở đường pháp lý",
+      "redTitle": "Hạn chế cấu trúc",
+      "votes": "phiếu"
+    }
+  },
+  "first30": {
+    "title": "30 Ngày Đầu",
+    "subtitle": "Biết thứ tự, hết lo sợ",
+    "loading": "Đang tải...",
+    "disclaimer": "Hướng dẫn này mang tính chất tham khảo và có thể khác nhau tùy theo hoàn cảnh cá nhân.",
+    "emergency": "Khẩn cấp 119",
+    "documents": "Cần chuẩn bị",
+    "recommendedBank": "Ngân hàng đề xuất",
+    "recommendedPhone": "Gói cước đề xuất",
+    "markDone": "Hoàn thành",
+    "skip": "Bỏ qua",
+    "waiting": "~{{days}} ngày",
+    "layer": {
+      "land": {
+        "title": "🛬 Đặt chân",
+        "subtitle": "Có mặt tại Hàn Quốc"
+      },
+      "identity": {
+        "title": "🪪 Chứng minh",
+        "subtitle": "Tồn tại hợp pháp"
+      },
+      "connect": {
+        "title": "🔗 Kết nối",
+        "subtitle": "Tồn tại kỹ thuật số"
+      },
+      "protect": {
+        "title": "🛡️ Bảo vệ",
+        "subtitle": "Được bảo vệ bởi hệ thống"
+      },
+      "settle": {
+        "title": "🌱 Định cư",
+        "subtitle": "Sâu hơn với Phivis"
+      }
+    },
+    "step": {
+      "airport_arrival": {
+        "title": "Đến sân bay",
+        "desc": "Việc cần làm sau nhập cảnh",
+        "emotion": "Bạn đã đến! Từng bước một nhé."
+      },
+      "temp_housing": {
+        "title": "Chỗ ở tạm",
+        "desc": "Đảm bảo nơi ở đêm đầu"
+      },
+      "prepaid_sim": {
+        "title": "SIM trả trước",
+        "desc": "Mua tại cửa hàng tiện lợi sân bay"
+      },
+      "arc_apply": {
+        "title": "Đăng ký ARC",
+        "desc": "Nộp đơn tại sở di trú trong 90 ngày",
+        "caution": "Phạt nếu không nộp trong 90 ngày",
+        "emotion": "Bước quan trọng nhất. Xong bước này, mọi thứ sẽ mở ra."
+      },
+      "arc_waiting": {
+        "title": "Chờ ARC",
+        "desc": "2-4 tuần. Có những việc bạn có thể chuẩn bị.",
+        "emotion": "Bực bội phải không? Bình thường thôi. Hàn Quốc cần ARC cho hầu hết mọi thứ."
+      },
+      "arc_received": {
+        "title": "Nhận ARC",
+        "desc": "Nhận tại sở di trú. Giờ có thể mở ngân hàng, điện thoại!",
+        "emotion": "Chúc mừng! Giờ bạn có thể sinh hoạt đầy đủ tại Hàn Quốc."
+      },
+      "bank_open": {
+        "title": "Mở tài khoản ngân hàng",
+        "desc": "ARC + hộ chiếu",
+        "caution": "Đến chi nhánh có quầy dành cho người nước ngoài",
+        "emotion": "Có thể bị từ chối. Bình thường. Thử chi nhánh khác."
+      },
+      "postpaid_phone": {
+        "title": "Chuyển trả sau",
+        "desc": "Cần ARC + tài khoản ngân hàng"
+      },
+      "essential_apps": {
+        "title": "Ứng dụng cần thiết",
+        "desc": "KakaoTalk, Naver Map, Papago, T-money"
+      },
+      "health_insurance": {
+        "title": "Bảo hiểm y tế",
+        "desc": "Cách đăng ký khác nhau theo loại visa",
+        "caution": "Không đăng ký có thể ảnh hưởng gia hạn visa"
+      },
+      "four_insurances": {
+        "title": "4 loại bảo hiểm",
+        "desc": "Hưu trí, y tế, thất nghiệp, tai nạn lao động"
+      },
+      "address_register": {
+        "title": "Đăng ký địa chỉ",
+        "desc": "Khai báo tại phường trong 14 ngày sau khi chuyển",
+        "caution": "Phạt nếu không khai trong 14 ngày",
+        "emotion": "Mang theo hợp đồng thuê nhà. Xin dấu xác nhận ngày để bảo vệ tiền đặt cọc."
+      },
+      "first_payslip": {
+        "title": "Kiểm tra bảng lương đầu tiên",
+        "desc": "Quét bảng lương bằng Phivis Scan"
+      },
+      "housing_stable": {
+        "title": "Ổn định nhà ở",
+        "desc": "Kiểm tra hợp đồng trong Tài liệu"
+      },
+      "phivis_score": {
+        "title": "Xem Phivis Score",
+        "desc": "Xem độ ổn định cư trú",
+        "emotion": "Đã một tháng rồi. Nhìn lại xem bạn đã làm được bao nhiêu."
+      }
+    }
   }
 }

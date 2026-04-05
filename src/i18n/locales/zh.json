@@ -44,17 +44,17 @@
       "cameraComingSoon": "相机扫描即将推出"
     },
     "empty": {
-    "title": "无法识别该文档",
-    "description": "请用更清晰的照片重试。确保文字清晰可读且整个文档完整可见。",
-    "noCountCharge": "此次扫描不会计入您的次数限制。",
-    "tryAgain": "重试"
+      "title": "无法识别该文档",
+      "description": "请用更清晰的照片重试。确保文字清晰可读且整个文档完整可见。",
+      "noCountCharge": "此次扫描不会计入您的次数限制。",
+      "tryAgain": "重试"
     },
     "limit": {
-    "remaining": "本月还剩 {{count}}/{{total}} 次扫描",
-    "title": "本月免费扫描次数已用完",
-    "description": "升级到Premium可以无限扫描文档。",
-    "upgrade": "开始Premium",
-    "goBack": "返回"
+      "remaining": "本月还剩 {{count}}/{{total}} 次扫描",
+      "title": "本月免费扫描次数已用完",
+      "description": "升级到Premium可以无限扫描文档。",
+      "upgrade": "开始Premium",
+      "goBack": "返回"
     },
     "progress": {
       "validating": "正在检查文件...",
@@ -480,5 +480,164 @@
     "lang_en": "English",
     "lang_vi": "Tiếng Việt",
     "lang_zh": "中文"
+  },
+  "lab": {
+    "title": "Lab",
+    "subtitle": "你的投票决定Phivis下一步做什么。",
+    "disclaimer": "Lab结果是Phivis开发方向的参考资料，不保证特定功能的发布。",
+    "tab": {
+      "vote": "投票",
+      "suggest": "建议",
+      "results": "结果",
+      "features": "状态"
+    },
+    "category": {
+      "visa_admin": "签证/行政",
+      "finance_money": "财务/金融",
+      "housing": "住房",
+      "health_medical": "健康/医疗",
+      "work_employment": "工作/就业",
+      "life_culture": "生活/文化",
+      "other": "其他"
+    },
+    "vote": {
+      "question": "这个月你最需要什么功能？",
+      "selected": "已选 {{count}}/{{max}}",
+      "votes": "{{count}} 票",
+      "totalVoters": "{{count}} 人参与",
+      "submit": "投票",
+      "updateVote": "修改投票",
+      "alreadyVoted": "你本月已投票，可以修改选择。"
+    },
+    "suggest": {
+      "question": "你需要什么功能？",
+      "hint": "用母语自由书写。AI会翻译并分类。",
+      "placeholder": "例如：哪些医院会说中文？",
+      "submit": "提交",
+      "success": "建议已提交！",
+      "classified": "分类为",
+      "translated": "翻译",
+      "limitReached": "免费用户每月只能提交1条建议。"
+    },
+    "results": {
+      "title": "{{period}} 结果",
+      "totalVoters": "{{count}} 人参与",
+      "empty": "暂无投票。"
+    },
+    "features": {
+      "empty": "暂无功能请求。",
+      "greenTitle": "现在可用",
+      "amberTitle": "法律途径推进中",
+      "redTitle": "结构性限制",
+      "votes": "票"
+    }
+  },
+  "first30": {
+    "title": "前30天",
+    "subtitle": "知道顺序就不怕",
+    "loading": "加载中...",
+    "disclaimer": "本指南为一般信息，可能因个人情况而异。",
+    "emergency": "紧急情况 119",
+    "documents": "所需材料",
+    "recommendedBank": "推荐银行",
+    "recommendedPhone": "推荐套餐",
+    "markDone": "完成",
+    "skip": "跳过",
+    "waiting": "约{{days}}天",
+    "layer": {
+      "land": {
+        "title": "🛬 落地",
+        "subtitle": "物理存在于韩国"
+      },
+      "identity": {
+        "title": "🪪 证明身份",
+        "subtitle": "法律上存在"
+      },
+      "connect": {
+        "title": "🔗 连接世界",
+        "subtitle": "数字化存在"
+      },
+      "protect": {
+        "title": "🛡️ 获得保障",
+        "subtitle": "受制度保护"
+      },
+      "settle": {
+        "title": "🌱 扎根",
+        "subtitle": "用Phivis深入"
+      }
+    },
+    "step": {
+      "airport_arrival": {
+        "title": "到达机场",
+        "desc": "入境后要做的事",
+        "emotion": "终于到了！一步一步来。"
+      },
+      "temp_housing": {
+        "title": "临时住所",
+        "desc": "确保第一晚住处"
+      },
+      "prepaid_sim": {
+        "title": "预付费SIM卡",
+        "desc": "在机场便利店或运营商柜台购买"
+      },
+      "arc_apply": {
+        "title": "申请外国人登录证(ARC)",
+        "desc": "入境90天内在出入境管理局申请",
+        "caution": "90天内未申请将被罚款",
+        "emotion": "最重要的一步。完成后一切都会打开。"
+      },
+      "arc_waiting": {
+        "title": "等待ARC",
+        "desc": "申请后需要2-4周。这段时间可以提前准备。",
+        "emotion": "烦躁吗？很正常。韩国没有ARC几乎什么都做不了。但如果现在准备好，拿到ARC那天就能立刻进入下一步。"
+      },
+      "arc_received": {
+        "title": "领取ARC",
+        "desc": "在出入境管理局领取。现在可以开银行、办手机了！",
+        "emotion": "恭喜！现在可以正式在韩国生活了。"
+      },
+      "bank_open": {
+        "title": "开设银行账户",
+        "desc": "ARC + 护照开户",
+        "caution": "去有外国人专用窗口的网点",
+        "emotion": "可能会被拒绝，这很正常。试试其他网点。"
+      },
+      "postpaid_phone": {
+        "title": "转后付费手机",
+        "desc": "需要ARC + 银行账户"
+      },
+      "essential_apps": {
+        "title": "必装应用",
+        "desc": "KakaoTalk、Naver Map、Papago、T-money"
+      },
+      "health_insurance": {
+        "title": "确认健康保险",
+        "desc": "根据签证类型，加入方式不同",
+        "caution": "未加入可能影响签证续签"
+      },
+      "four_insurances": {
+        "title": "确认四大保险",
+        "desc": "国民年金、健康保险、雇佣保险、产灾保险"
+      },
+      "address_register": {
+        "title": "转入申报",
+        "desc": "搬家后14天内到社区中心申报",
+        "caution": "14天内未申报将被罚款",
+        "emotion": "带上租房合同。同时申请确定日期印章以保护押金。"
+      },
+      "first_payslip": {
+        "title": "查看第一份工资单",
+        "desc": "用Phivis Scan扫描工资单"
+      },
+      "housing_stable": {
+        "title": "住房稳定",
+        "desc": "在文档中确认合同"
+      },
+      "phivis_score": {
+        "title": "查看Phivis Score",
+        "desc": "一目了然的居留稳定性",
+        "emotion": "已经一个月了。看看你已经完成了多少。"
+      }
+    }
   }
 }

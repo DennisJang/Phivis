@@ -48,18 +48,18 @@
       "cameraComingSoon": "카메라 스캔 준비 중"
     },
     "empty": {
-    "title": "문서를 인식하지 못했어요",
-    "description": "문서가 잘 보이는 사진으로 다시 시도해보세요. 글씨가 선명하고 전체가 나와야 정확하게 분석할 수 있어요.",
-    "noCountCharge": "이 스캔은 횟수에 포함되지 않아요.",
-    "tryAgain": "다시 시도하기"
+      "title": "문서를 인식하지 못했어요",
+      "description": "문서가 잘 보이는 사진으로 다시 시도해보세요. 글씨가 선명하고 전체가 나와야 정확하게 분석할 수 있어요.",
+      "noCountCharge": "이 스캔은 횟수에 포함되지 않아요.",
+      "tryAgain": "다시 시도하기"
     },
     "limit": {
-    "remaining": "이번 달 {{count}}/{{total}}회 남음",
-    "title": "이번 달 무료 스캔을 모두 사용했어요",
-    "description": "Premium으로 업그레이드하면 무제한으로 문서를 스캔할 수 있어요.",
-    "upgrade": "Premium 시작하기",
-    "goBack": "돌아가기"
-   },
+      "remaining": "이번 달 {{count}}/{{total}}회 남음",
+      "title": "이번 달 무료 스캔을 모두 사용했어요",
+      "description": "Premium으로 업그레이드하면 무제한으로 문서를 스캔할 수 있어요.",
+      "upgrade": "Premium 시작하기",
+      "goBack": "돌아가기"
+    },
     "progress": {
       "validating": "파일 확인 중...",
       "uploading": "문서를 읽고 있어요...",
@@ -88,7 +88,7 @@
       "networkError": "연결 오류입니다. 인터넷 연결을 확인하고 다시 시도해주세요.",
       "goBack": "돌아가기",
       "retry": "다시 시도",
-       "noCountCharge": "이 스캔은 횟수에 포함되지 않아요."
+      "noCountCharge": "이 스캔은 횟수에 포함되지 않아요."
     }
   },
   "home": {
@@ -484,5 +484,164 @@
     "lang_en": "English",
     "lang_vi": "Tiếng Việt",
     "lang_zh": "中文"
+  },
+  "lab": {
+    "title": "Lab",
+    "subtitle": "당신의 한 표가 Phivis의 다음 기능을 결정합니다.",
+    "disclaimer": "Lab 결과는 Phivis 개발 방향의 참고 자료이며, 특정 기능의 출시를 보장하지 않습니다.",
+    "tab": {
+      "vote": "투표",
+      "suggest": "제안",
+      "results": "결과",
+      "features": "상태"
+    },
+    "category": {
+      "visa_admin": "비자/행정",
+      "finance_money": "돈/금융",
+      "housing": "집/주거",
+      "health_medical": "건강/의료",
+      "work_employment": "일/직장",
+      "life_culture": "생활/문화",
+      "other": "기타"
+    },
+    "vote": {
+      "question": "이번 달에 어떤 기능이 가장 필요하세요?",
+      "selected": "{{count}}/{{max}} 선택",
+      "votes": "{{count}}표",
+      "totalVoters": "{{count}}명 참여",
+      "submit": "투표하기",
+      "updateVote": "투표 수정하기",
+      "alreadyVoted": "이번 달에 이미 투표하셨어요. 선택을 변경할 수 있습니다."
+    },
+    "suggest": {
+      "question": "어떤 기능이 필요하세요?",
+      "hint": "모국어로 자유롭게 적어주세요. AI가 번역하고 분류합니다.",
+      "placeholder": "예: 베트남어 가능한 병원이 어디인가요?",
+      "submit": "제출하기",
+      "success": "제안이 등록되었습니다!",
+      "classified": "분류",
+      "translated": "번역",
+      "limitReached": "무료 이용 시 월 1건만 제안할 수 있어요."
+    },
+    "results": {
+      "title": "{{period}} 결과",
+      "totalVoters": "{{count}}명 참여",
+      "empty": "아직 투표가 없습니다."
+    },
+    "features": {
+      "empty": "등록된 기능 요청이 없습니다.",
+      "greenTitle": "지금 가능",
+      "amberTitle": "법적 경로 개척 중",
+      "redTitle": "구조적 한계",
+      "votes": "표"
+    }
+  },
+  "first30": {
+    "title": "첫 30일",
+    "subtitle": "순서를 알면 두렵지 않다",
+    "loading": "로딩 중...",
+    "disclaimer": "이 가이드는 일반적인 안내이며, 개인 상황에 따라 다를 수 있습니다.",
+    "emergency": "응급 상황 119",
+    "documents": "준비물",
+    "recommendedBank": "추천 은행",
+    "recommendedPhone": "추천 요금제",
+    "markDone": "완료",
+    "skip": "건너뛰기",
+    "waiting": "약 {{days}}일 소요",
+    "layer": {
+      "land": {
+        "title": "🛬 발 딛기",
+        "subtitle": "물리적으로 한국에 존재하기"
+      },
+      "identity": {
+        "title": "🪪 나를 증명하기",
+        "subtitle": "법적으로 존재하기"
+      },
+      "connect": {
+        "title": "🔗 세상과 연결되기",
+        "subtitle": "디지털로 존재하기"
+      },
+      "protect": {
+        "title": "🛡️ 안전망 확보",
+        "subtitle": "제도적으로 보호받기"
+      },
+      "settle": {
+        "title": "🌱 뿌리내리기",
+        "subtitle": "Phivis로 더 깊게"
+      }
+    },
+    "step": {
+      "airport_arrival": {
+        "title": "공항 도착",
+        "desc": "입국 심사 후 공항에서 해야 할 일",
+        "emotion": "드디어 도착했어요! 긴장되지만, 한 단계씩 해나가면 됩니다."
+      },
+      "temp_housing": {
+        "title": "임시 숙소 확보",
+        "desc": "첫날 머물 곳 확인"
+      },
+      "prepaid_sim": {
+        "title": "선불 SIM 구매",
+        "desc": "공항 편의점이나 통신사 부스에서 구매"
+      },
+      "arc_apply": {
+        "title": "외국인등록증(ARC) 신청",
+        "desc": "입국 90일 이내 출입국사무소에서 신청",
+        "caution": "90일 이내 미신청 시 과태료",
+        "emotion": "가장 중요한 단계예요. 이것만 하면 나머지가 열립니다."
+      },
+      "arc_waiting": {
+        "title": "ARC 수령 대기",
+        "desc": "신청 후 2~4주 소요. 이 기간에 미리 준비할 수 있는 것들이 있어요.",
+        "emotion": "답답하죠? 정상입니다. 한국은 ARC 없이는 정말 많은 게 안 됩니다. 하지만 이 기간에 미리 준비하면, ARC 받는 날 바로 다음 단계로 넘어갈 수 있어요."
+      },
+      "arc_received": {
+        "title": "ARC 수령 완료",
+        "desc": "출입국사무소에서 수령. 이제 은행, 폰, 보험이 가능해집니다!",
+        "emotion": "축하합니다! 이제 한국에서 본격적으로 생활할 수 있어요."
+      },
+      "bank_open": {
+        "title": "은행 계좌 개설",
+        "desc": "ARC + 여권으로 계좌 개설",
+        "caution": "외국인 전담 창구가 있는 지점을 방문하세요",
+        "emotion": "거절당할 수 있어요. 정상입니다. 다른 지점을 시도해보세요."
+      },
+      "postpaid_phone": {
+        "title": "후불 폰 전환",
+        "desc": "ARC + 은행계좌로 후불 요금제 가입 가능"
+      },
+      "essential_apps": {
+        "title": "필수 앱 설치",
+        "desc": "KakaoTalk, Naver Map, Papago, T-money"
+      },
+      "health_insurance": {
+        "title": "건강보험 확인",
+        "desc": "비자에 따라 가입 방식이 다릅니다",
+        "caution": "미가입 시 비자 연장 심사에 영향"
+      },
+      "four_insurances": {
+        "title": "4대보험 확인",
+        "desc": "국민연금, 건강보험, 고용보험, 산재보험"
+      },
+      "address_register": {
+        "title": "전입신고",
+        "desc": "이사 후 14일 이내 주민센터에서 신고",
+        "caution": "14일 이내 미신고 시 과태료",
+        "emotion": "집 계약서를 가져가세요. 확정일자도 같이 받으면 보증금이 보호됩니다."
+      },
+      "first_payslip": {
+        "title": "첫 급여명세서 확인",
+        "desc": "Scan으로 급여명세서를 찍어보세요"
+      },
+      "housing_stable": {
+        "title": "주거 안정",
+        "desc": "계약서 확인은 서류 정리에서"
+      },
+      "phivis_score": {
+        "title": "Phivis Score 확인",
+        "desc": "체류 안정성을 한눈에",
+        "emotion": "한 달이 됐어요. 처음과 비교하면 얼마나 많은 걸 해냈는지 보세요."
+      }
+    }
   }
 }
