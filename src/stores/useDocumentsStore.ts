@@ -149,6 +149,9 @@ interface DocumentsState {
   view: DocView;
   setView: (view: DocView) => void;
 
+  // Civil types (DB에서 유효한 것만)
+  availableCivilTypes: string[];
+
   // Intent
   intent: IntentData | null;
   civilType: string;
@@ -173,6 +176,9 @@ interface DocumentsState {
   uploadSuccess: string | null;
 
   // ─── Actions ───
+
+  /** 유효한 civil_type 목록 로드 (get_civil_types) */
+  loadCivilTypes: (visaType: string) => Promise<void>;
 
   /** 민원 생성 (create_intent) */
   createIntent: (visaType: string, civilType: string) => Promise<void>;
@@ -233,6 +239,7 @@ async function callDocsPrepare(action: string, payload: Record<string, unknown> 
 
 const initialState = {
   view: "checklist" as DocView,
+  availableCivilTypes: [] as string[],
   intent: null as IntentData | null,
   civilType: "extension",
   checklist: [] as ChecklistItem[],
@@ -250,6 +257,20 @@ export const useDocumentsStore = create<DocumentsState>((set, get) => ({
   ...initialState,
 
   setView: (view) => set({ view }),
+
+  loadCivilTypes: async (visaType) => {
+    try {
+      const data = await callDocsPrepare("get_civil_types", { visa_type: visaType });
+      const types = data.civil_types ?? [];
+      set({ availableCivilTypes: types });
+      // 현재 civilType이 유효하지 않으면 첫 번째로 변경
+      if (types.length > 0 && !types.includes(get().civilType)) {
+        set({ civilType: types[0] });
+      }
+    } catch (e: any) {
+      console.error("loadCivilTypes error:", e.message);
+    }
+  },
 
   createIntent: async (visaType, civilType) => {
     set({ loading: true, error: null });

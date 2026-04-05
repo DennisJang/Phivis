@@ -76,13 +76,14 @@ export function Documents() {
 
   const {
     view, setView,
+    availableCivilTypes,
     intent, civilType, setCivilType,
     checklist, vault, guide,
     selectedOfficeId, selectOffice,
     consistencyIssues,
     loading, error,
     uploadingCode, uploadSuccess, setUploadingCode, setUploadSuccess,
-    createIntent, loadChecklist, loadVault, loadGuide,
+    createIntent, loadCivilTypes, loadChecklist, loadVault, loadGuide,
     checkConsistency, markSubmitted, updateResult,
     reset,
   } = useDocumentsStore();
@@ -108,10 +109,17 @@ export function Documents() {
     if (userId && !userProfile) hydrateDash(userId);
   }, [userId]);
 
+  // ─── Load civil types on mount ───
+
+  useEffect(() => {
+    if (visaType) loadCivilTypes(visaType);
+  }, [visaType]);
+
   // ─── Auto-create intent on mount ───
 
   useEffect(() => {
     if (!userId || !visaType) return;
+    if (!availableCivilTypes.length) return; // civil types 로드 대기
 
     // PIPA 동의 체크
     if (userProfile?.event_consent === null || userProfile?.event_consent === undefined) {
@@ -122,7 +130,7 @@ export function Documents() {
     if (!intent) {
       createIntent(visaType, civilType);
     }
-  }, [userId, visaType, userProfile?.event_consent, intent]);
+  }, [userId, visaType, userProfile?.event_consent, intent, availableCivilTypes]);
 
   // ─── Civil type change → recreate intent ───
 
@@ -234,14 +242,6 @@ export function Documents() {
   const ringC = 2 * Math.PI * ringR;
   const ringOffset = ringC - (readiness / 100) * ringC;
 
-  // ─── Available civil types ───
-
-  const availableCivilTypes = useMemo(() => {
-    const codesInChecklist = new Set(checklist.map(c => c.civil_type));
-    // 기본적으로 모든 타입 표시, 데이터 있는 것만 필터
-    return CIVIL_TYPES;
-  }, [checklist]);
-
   // ─── Render ───
 
   if (!visaType) {
@@ -284,16 +284,16 @@ export function Documents() {
 
         {/* ─── Civil Type Selector ─── */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
-          {availableCivilTypes.map(ct => (
-            <button key={ct.key} onClick={() => handleCivilTypeChange(ct.key)}
+          {availableCivilTypes.map(ctKey => (
+            <button key={ctKey} onClick={() => handleCivilTypeChange(ctKey)}
               className="flex-shrink-0 py-2 px-3.5 rounded-2xl text-[12px] transition-all active:scale-[0.97]"
               style={{
-                fontWeight: civilType === ct.key ? 600 : 400,
-                backgroundColor: civilType === ct.key ? "var(--color-action-primary)" : "var(--color-surface-primary)",
-                color: civilType === ct.key ? "var(--color-text-on-color)" : "var(--color-text-secondary)",
-                boxShadow: civilType === ct.key ? "none" : "0 1px 3px rgba(0,0,0,0.06)",
+                fontWeight: civilType === ctKey ? 600 : 400,
+                backgroundColor: civilType === ctKey ? "var(--color-action-primary)" : "var(--color-surface-primary)",
+                color: civilType === ctKey ? "var(--color-text-on-color)" : "var(--color-text-secondary)",
+                boxShadow: civilType === ctKey ? "none" : "0 1px 3px rgba(0,0,0,0.06)",
               }}>
-              {t(ct.labelKey, { defaultValue: ct.key })}
+              {t(`visa:civil.${ctKey}`, { defaultValue: ctKey })}
             </button>
           ))}
         </div>
