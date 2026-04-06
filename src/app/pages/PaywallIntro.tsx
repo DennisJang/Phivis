@@ -2,12 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { ChevronRight } from "lucide-react";
+import paywallIntroImg from "../../public/images/paywall-intro.png";
 
 // ============================================
 // PaywallIntro — 구독 유도 스플래시
 // 레퍼런스 왼쪽 이미지 1:1 구조
-// 일러스트: public/images/paywall-intro.png
-// 텍스트만 Phivis 맞춤, 타이포/레이아웃 레퍼런스 유지
+// 이미지: src/public/images/paywall-intro.png (Vite import)
 // ============================================
 
 const springs = {
@@ -30,7 +30,7 @@ export function PaywallIntro() {
         margin: "0 auto",
       }}
     >
-      {/* ── Illustration — 레퍼런스 이미지 그대로 ── */}
+      {/* ── Illustration ── */}
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -45,18 +45,19 @@ export function PaywallIntro() {
         }}
       >
         <img
-          src="/images/paywall-intro.png"
+          src={paywallIntroImg}
           alt=""
           style={{
             width: "100%",
             maxWidth: 280,
             height: "auto",
             objectFit: "contain",
+            mixBlendMode: "multiply",
           }}
         />
       </motion.div>
 
-      {/* ── Text — 레퍼런스 타이포그래피 ── */}
+      {/* ── Text ── */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -87,7 +88,7 @@ export function PaywallIntro() {
         </p>
       </motion.div>
 
-      {/* ── CTA — 레퍼런스: 흰 pill + 검정 원형 → ── */}
+      {/* ── CTA ── */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
