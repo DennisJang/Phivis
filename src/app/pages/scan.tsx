@@ -1,34 +1,25 @@
 // src/app/pages/scan.tsx
 // ============================================
-// Scan 위젯 — Phase F 디자인 패스
+// Scan 위젯 — Phase F 디자인 패스 v2
 //
-// 레퍼런스: 바코드 스캔 앱 (카메라→스캔라인→결과 카드 전환)
-// DNA: 뉴모피즘 그림자 + 따뜻한 그라데이션 + 극대화 radius + 타이포 대비 + 넓은 여백
-//
-// 변경사항 (Phase F):
-//   - 업로드 영역: 코너 브래킷 스캔 프레임 스타일
-//   - analyzing: indigo 스캔 라인 스윕 애니메이션
-//   - result: spring sheet 전환 (아래에서 올라옴)
-//   - 카테고리 이모지 → Lucide 아이콘 (#43)
-//   - linked_widget 네비게이션 구현 (#48)
-//   - Shimmer 스켈레톤 (Loader2 대체)
-//   - 모든 모션 DS v3.0 토큰 기반
+// 핵심 전환 (레퍼런스 기반):
+//   idle: 코너 브래킷 스캔 프레임 업로드 영역
+//   analyzing: 문서 프리뷰 전체 + 스캔 라인 스윕 + 프로그레스
+//   result: 문서 프리뷰가 위로 축소 (layoutId) → 아래에서 결과 카드 올라옴
 //
 // 층 1 불가침: scan_results 스키마, scan-analyze EF API 계약, Auth
-// 층 2 조정: 상태 전이 순서(idle→validating→uploading→analyzing→result)
-// 층 3 자유: 모든 시각 표현
+// 층 3 자유: 모든 시각 표현, 전환 모션
 // ============================================
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, LayoutGroup } from 'motion/react';
 import {
   Upload,
   FileText,
   Camera,
   AlertCircle,
   ChevronDown,
-  ChevronUp,
   RotateCcw,
   ArrowRight,
   FileQuestion,
@@ -58,7 +49,7 @@ const springs = {
 } as const;
 
 // ═══════════════════════════════════════════
-// Category config — 이모지 → Lucide (#43)
+// Category config — Lucide (#43)
 // ═══════════════════════════════════════════
 const CATEGORY_CONFIG: Record<string, {
   icon: React.ElementType;
@@ -66,53 +57,16 @@ const CATEGORY_CONFIG: Record<string, {
   text: string;
   label: string;
 }> = {
-  payslip: {
-    icon: Wallet,
-    bg: 'var(--color-bg-info)',
-    text: 'var(--color-text-info)',
-    label: 'category.payslip',
-  },
-  health_insurance: {
-    icon: Shield,
-    bg: 'var(--color-bg-success)',
-    text: 'var(--color-text-success)',
-    label: 'category.health_insurance',
-  },
-  government: {
-    icon: ClipboardList,
-    bg: 'var(--color-bg-warning)',
-    text: 'var(--color-text-warning)',
-    label: 'category.government',
-  },
-  lease: {
-    icon: Home,
-    bg: 'var(--color-bg-info)',
-    text: 'var(--color-text-info)',
-    label: 'category.lease',
-  },
-  visa_document: {
-    icon: FileCheck,
-    bg: 'var(--color-bg-info)',
-    text: 'var(--color-text-info)',
-    label: 'category.visa_document',
-  },
-  hwp: {
-    icon: Paperclip,
-    bg: 'var(--color-bg-info)',
-    text: 'var(--color-text-info)',
-    label: 'category.hwp',
-  },
-  general: {
-    icon: FolderOpen,
-    bg: 'var(--color-bg-info)',
-    text: 'var(--color-text-info)',
-    label: 'category.general',
-  },
+  payslip:          { icon: Wallet, bg: 'var(--color-bg-info)', text: 'var(--color-text-info)', label: 'category.payslip' },
+  health_insurance: { icon: Shield, bg: 'var(--color-bg-success)', text: 'var(--color-text-success)', label: 'category.health_insurance' },
+  government:       { icon: ClipboardList, bg: 'var(--color-bg-warning)', text: 'var(--color-text-warning)', label: 'category.government' },
+  lease:            { icon: Home, bg: 'var(--color-bg-info)', text: 'var(--color-text-info)', label: 'category.lease' },
+  visa_document:    { icon: FileCheck, bg: 'var(--color-bg-info)', text: 'var(--color-text-info)', label: 'category.visa_document' },
+  hwp:              { icon: Paperclip, bg: 'var(--color-bg-info)', text: 'var(--color-text-info)', label: 'category.hwp' },
+  general:          { icon: FolderOpen, bg: 'var(--color-bg-info)', text: 'var(--color-text-info)', label: 'category.general' },
 };
 
-// ═══════════════════════════════════════════
-// Widget route map (#48 linked_widget)
-// ═══════════════════════════════════════════
+// linked_widget 라우트 (#48)
 const WIDGET_ROUTES: Record<string, string> = {
   finance: '/finance',
   documents: '/documents',
@@ -124,118 +78,117 @@ const WIDGET_ROUTES: Record<string, string> = {
 // ═══════════════════════════════════════════
 function AnimatedNumber({ value, prefix = '' }: { value: number; prefix?: string }) {
   const mv = useMotionValue(0);
-  const display = useTransform(mv, (v) =>
-    `${prefix}${Math.round(v).toLocaleString()}`
-  );
-
+  const display = useTransform(mv, (v) => `${prefix}${Math.round(v).toLocaleString()}`);
   useEffect(() => {
-    const controls = animate(mv, value, {
-      type: 'spring' as const,
-      ...springs.count,
-    });
+    const controls = animate(mv, value, { type: 'spring' as const, ...springs.count });
     return controls.stop;
   }, [value, mv]);
-
   return <motion.span>{display}</motion.span>;
 }
 
 // ═══════════════════════════════════════════
-// Corner Bracket Frame (스캔 프레임)
+// Corner Bracket Frame
 // ═══════════════════════════════════════════
-function ScanFrame({ children, active = false }: { children: React.ReactNode; active?: boolean }) {
-  const bracketColor = active ? 'var(--color-action-primary)' : 'var(--color-border-default)';
-  const bracketSize = 24;
-  const bracketThickness = 3;
-  const bracketRadius = 12;
+function ScanFrame({ active = false }: { active?: boolean }) {
+  const color = active ? 'var(--color-action-primary)' : 'var(--color-border-default)';
+  const size = 28;
+  const thickness = 3;
+  const r = 14;
 
-  const cornerStyle = (position: Record<string, number | string>): React.CSSProperties => ({
-    position: 'absolute',
-    width: bracketSize,
-    height: bracketSize,
-    ...position,
-  });
-
-  // SVG corner bracket
   const Corner = ({ rotate }: { rotate: number }) => (
-    <svg
-      width={bracketSize}
-      height={bracketSize}
-      viewBox={`0 0 ${bracketSize} ${bracketSize}`}
-      style={{ transform: `rotate(${rotate}deg)` }}
-    >
-      <path
-        d={`M ${bracketSize} 0 L ${bracketRadius} 0 Q 0 0 0 ${bracketRadius} L 0 ${bracketSize}`}
-        fill="none"
-        stroke={bracketColor}
-        strokeWidth={bracketThickness}
-        strokeLinecap="round"
-      />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: `rotate(${rotate}deg)` }}>
+      <path d={`M ${size} 0 L ${r} 0 Q 0 0 0 ${r} L 0 ${size}`} fill="none" stroke={color} strokeWidth={thickness} strokeLinecap="round" />
     </svg>
   );
 
   return (
-    <div style={{ position: 'relative' }}>
-      {/* Corner brackets */}
-      <div style={cornerStyle({ top: 0, left: 0 })}><Corner rotate={0} /></div>
-      <div style={cornerStyle({ top: 0, right: 0 })}><Corner rotate={90} /></div>
-      <div style={cornerStyle({ bottom: 0, right: 0 })}><Corner rotate={180} /></div>
-      <div style={cornerStyle({ bottom: 0, left: 0 })}><Corner rotate={270} /></div>
-      {children}
-    </div>
+    <>
+      <div style={{ position: 'absolute', top: 16, left: 16 }}><Corner rotate={0} /></div>
+      <div style={{ position: 'absolute', top: 16, right: 16 }}><Corner rotate={90} /></div>
+      <div style={{ position: 'absolute', bottom: 16, right: 16 }}><Corner rotate={180} /></div>
+      <div style={{ position: 'absolute', bottom: 16, left: 16 }}><Corner rotate={270} /></div>
+    </>
   );
 }
 
 // ═══════════════════════════════════════════
-// Scan Line Animation (분석 중)
+// Scan Line Animation
 // ═══════════════════════════════════════════
 function ScanLineAnimation() {
   return (
-    <div
+    <motion.div
       style={{
         position: 'absolute',
         left: 0,
         right: 0,
-        top: 0,
-        bottom: 0,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        borderRadius: 'var(--radius-lg)',
+        height: 2,
+        background: 'linear-gradient(90deg, transparent 0%, var(--color-action-primary) 20%, var(--color-action-primary) 80%, transparent 100%)',
+        boxShadow: '0 0 16px var(--color-action-primary), 0 0 32px rgba(99, 91, 255, 0.25)',
       }}
-    >
-      <motion.div
-        style={{
-          height: 2,
-          background: 'linear-gradient(90deg, transparent 0%, var(--color-action-primary) 30%, var(--color-action-primary) 70%, transparent 100%)',
-          opacity: 0.8,
-          boxShadow: '0 0 12px var(--color-action-primary), 0 0 24px rgba(99, 91, 255, 0.3)',
-        }}
-        animate={{
-          y: [0, 180, 0],
-        }}
-        transition={{
-          duration: 2.5,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
-    </div>
+      animate={{ top: ['10%', '90%', '10%'] }}
+      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+    />
   );
 }
 
 // ═══════════════════════════════════════════
-// Shimmer Skeleton
+// Document Preview (layoutId로 연속 전환)
 // ═══════════════════════════════════════════
-function Skeleton({ style, className }: { style?: React.CSSProperties; className?: string }) {
+function DocumentPreview({
+  filePreviewUrl,
+  file,
+  compact = false,
+  showScanLine = false,
+}: {
+  filePreviewUrl: string | null;
+  file: File | null;
+  compact?: boolean;
+  showScanLine?: boolean;
+}) {
   return (
-    <div
-      className={className}
+    <motion.div
+      layoutId="doc-preview"
       style={{
+        borderRadius: 'var(--radius-xl)',
+        overflow: 'hidden',
         backgroundColor: 'var(--color-surface-secondary)',
-        borderRadius: 'var(--radius-md)',
-        animation: 'shimmer 1.5s ease-in-out infinite',
-        ...style,
+        position: 'relative',
+        height: compact ? 100 : 260,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
-    />
+      transition={{ type: 'spring' as const, ...springs.sheet }}
+    >
+      {filePreviewUrl ? (
+        <img
+          src={filePreviewUrl}
+          alt={file?.name ?? ''}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: compact ? 'cover' : 'contain',
+            opacity: compact ? 0.6 : 1,
+          }}
+        />
+      ) : (
+        <FileText size={compact ? 24 : 48} color="var(--color-icon-secondary)" />
+      )}
+
+      {/* 스캔 라인 (analyzing 상태) */}
+      {showScanLine && <ScanLineAnimation />}
+
+      {/* 컴팩트 모드에서 dim 오버레이 */}
+      {compact && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.15) 100%)',
+          }}
+        />
+      )}
+    </motion.div>
   );
 }
 
@@ -244,11 +197,14 @@ function Skeleton({ style, className }: { style?: React.CSSProperties; className
 // ═══════════════════════════════════════════
 export default function ScanPage() {
   const { t } = useTranslation('scan');
-  const { state, checkScanLimit, limitChecked } = useScanStore();
+  const { state, checkScanLimit, limitChecked, filePreviewUrl, file } = useScanStore();
 
   useEffect(() => {
     checkScanLimit();
   }, [checkScanLimit]);
+
+  // analyzing 또는 result 상태에서 프리뷰를 보여줄지
+  const showPreview = state === 'validating' || state === 'uploading' || state === 'analyzing' || state === 'result';
 
   return (
     <div
@@ -261,11 +217,7 @@ export default function ScanPage() {
       {/* Header */}
       <motion.h1
         className="text-[24px] font-bold"
-        style={{
-          color: 'var(--color-text-primary)',
-          letterSpacing: '-0.03em',
-          marginBottom: 'var(--space-xs)',
-        }}
+        style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.03em', marginBottom: 'var(--space-xs)' }}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.05, 0.7, 0.1, 1.0] }}
@@ -274,10 +226,7 @@ export default function ScanPage() {
       </motion.h1>
       <motion.p
         className="text-[15px]"
-        style={{
-          color: 'var(--color-text-secondary)',
-          marginBottom: 'var(--space-lg)',
-        }}
+        style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1, duration: 0.3 }}
@@ -285,21 +234,35 @@ export default function ScanPage() {
         {t('subtitle')}
       </motion.p>
 
-      {/* 잔여 횟수 */}
       {limitChecked && state === 'idle' && <ScanCountBadge />}
 
-      {/* State-driven content */}
-      <AnimatePresence mode="wait">
-        {state === 'idle' && <ScanUpload key="upload" />}
-        {(state === 'validating' || state === 'uploading' || state === 'analyzing') && (
-          <ScanProgress key="progress" />
+      <LayoutGroup>
+        {/* ─── 문서 프리뷰 (analyzing↔result 공유) ─── */}
+        {showPreview && (
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <DocumentPreview
+              filePreviewUrl={filePreviewUrl}
+              file={file}
+              compact={state === 'result'}
+              showScanLine={state === 'analyzing'}
+            />
+          </div>
         )}
-        {state === 'result' && <ScanResult key="result" />}
-        {state === 'error' && <ScanError key="error" />}
-        {state === 'limitReached' && <ScanLimitReached key="limit" />}
-      </AnimatePresence>
 
-      {/* Shimmer keyframes */}
+        {/* ─── State content ─── */}
+        <AnimatePresence mode="wait">
+          {state === 'idle' && <ScanUpload key="upload" />}
+
+          {(state === 'validating' || state === 'uploading' || state === 'analyzing') && (
+            <ScanProgressInfo key="progress-info" />
+          )}
+
+          {state === 'result' && <ScanResultCards key="result" />}
+          {state === 'error' && <ScanError key="error" />}
+          {state === 'limitReached' && <ScanLimitReached key="limit" />}
+        </AnimatePresence>
+      </LayoutGroup>
+
       <style>{`
         @keyframes shimmer {
           0% { opacity: 0.5; }
@@ -317,9 +280,7 @@ export default function ScanPage() {
 function ScanCountBadge() {
   const { t } = useTranslation('scan');
   const { scanCount, isPremium } = useScanStore();
-
   if (isPremium) return null;
-
   const remaining = Math.max(0, FREE_MONTHLY_LIMIT - scanCount);
 
   return (
@@ -330,7 +291,6 @@ function ScanCountBadge() {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 'var(--space-xs)',
         padding: '4px 12px',
         borderRadius: 'var(--radius-full)',
         backgroundColor: remaining <= 1 ? 'var(--color-bg-warning)' : 'var(--color-surface-secondary)',
@@ -346,7 +306,7 @@ function ScanCountBadge() {
 }
 
 // ═══════════════════════════════════════════
-// idle: 업로드 영역 (코너 브래킷 스캔 프레임)
+// idle: 업로드 영역
 // ═══════════════════════════════════════════
 function ScanUpload() {
   const { t } = useTranslation('scan');
@@ -379,7 +339,6 @@ function ScanUpload() {
       exit={{ opacity: 0, y: -8 }}
       transition={{ type: 'spring' as const, ...springs.expand }}
     >
-      {/* 스캔 프레임 업로드 영역 */}
       <motion.div
         whileTap={{ scale: 0.98 }}
         transition={{ type: 'spring' as const, ...springs.pop }}
@@ -392,76 +351,44 @@ function ScanUpload() {
           padding: 'var(--space-2xl) var(--space-lg)',
           textAlign: 'center',
           cursor: 'pointer',
-          backgroundColor: isDragOver
-            ? 'var(--color-action-primary-subtle)'
-            : 'var(--color-surface-primary)',
+          backgroundColor: isDragOver ? 'var(--color-action-primary-subtle)' : 'var(--color-surface-primary)',
           boxShadow: 'var(--shadow-card-soft)',
           border: `1px solid ${isDragOver ? 'var(--color-action-primary)' : 'var(--color-border-subtle)'}`,
           position: 'relative',
-          overflow: 'hidden',
         }}
       >
-        <ScanFrame active={isDragOver}>
-          <div style={{ padding: 'var(--space-xl) var(--space-lg)' }}>
-            {/* 스캔 아이콘 */}
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 'var(--radius-lg)',
-                background: 'var(--color-action-primary-subtle)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto var(--space-lg)',
-              }}
-            >
-              <Upload size={24} color="var(--color-action-primary)" />
-            </div>
+        <ScanFrame active={isDragOver} />
 
-            <p
-              className="text-[16px] font-semibold"
-              style={{
-                color: 'var(--color-text-primary)',
-                marginBottom: 'var(--space-xs)',
-              }}
-            >
-              {t('upload.title')}
-            </p>
-            <p
-              className="text-[13px]"
-              style={{ color: 'var(--color-text-tertiary)' }}
-            >
-              {t('upload.formats')}
-            </p>
+        <div style={{ padding: 'var(--space-xl) var(--space-lg)' }}>
+          <div
+            style={{
+              width: 56, height: 56, borderRadius: 'var(--radius-lg)',
+              background: 'var(--color-action-primary-subtle)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto var(--space-lg)',
+            }}
+          >
+            <Upload size={24} color="var(--color-action-primary)" />
           </div>
-        </ScanFrame>
+          <p className="text-[16px] font-semibold" style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}>
+            {t('upload.title')}
+          </p>
+          <p className="text-[13px]" style={{ color: 'var(--color-text-tertiary)' }}>
+            {t('upload.formats')}
+          </p>
+        </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,application/pdf"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={handleFileChange} className="hidden" />
       </motion.div>
 
-      {/* 카메라 버튼 (Coming Soon) */}
       <motion.button
         whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring' as const, ...springs.pop }}
         className="w-full flex items-center justify-center gap-[var(--space-sm)]"
         style={{
-          marginTop: 'var(--space-md)',
-          padding: '14px 0',
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'var(--color-surface-secondary)',
-          color: 'var(--color-text-tertiary)',
-          fontSize: 15,
-          fontWeight: 600,
-          border: 'none',
-          cursor: 'not-allowed',
-          opacity: 0.5,
+          marginTop: 'var(--space-md)', padding: '14px 0',
+          borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--color-surface-secondary)',
+          color: 'var(--color-text-tertiary)', fontSize: 15, fontWeight: 600,
+          border: 'none', cursor: 'not-allowed', opacity: 0.5,
         }}
         disabled
       >
@@ -473,35 +400,16 @@ function ScanUpload() {
 }
 
 // ═══════════════════════════════════════════
-// validating / uploading / analyzing: 프로그레스
+// Progress info (프리뷰 아래에 표시)
 // ═══════════════════════════════════════════
-function ScanProgress() {
+function ScanProgressInfo() {
   const { t } = useTranslation('scan');
-  const { state, progress, filePreviewUrl, file } = useScanStore();
-
-  // progress를 부드럽게 애니메이션 (spring count)
-  const progressMv = useMotionValue(0);
-  const progressDisplay = useTransform(progressMv, (v) => `${Math.round(v)}%`);
-
-  useEffect(() => {
-    const controls = animate(progressMv, progress, {
-      type: 'spring' as const,
-      ...springs.count,
-    });
-    return controls.stop;
-  }, [progress, progressMv]);
+  const { state, progress } = useScanStore();
 
   const statusLabel =
     state === 'validating' ? t('progress.validating') :
     state === 'uploading'  ? t('progress.uploading') :
-    state === 'analyzing'  ? t('progress.analyzing') :
-    '';
-
-  const statusEmoji =
-    state === 'validating' ? '🔍' :
-    state === 'uploading'  ? '📤' :
-    state === 'analyzing'  ? '🧠' :
-    '';
+    state === 'analyzing'  ? t('progress.analyzing') : '';
 
   return (
     <motion.div
@@ -509,180 +417,49 @@ function ScanProgress() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ type: 'spring' as const, ...springs.expand }}
-      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}
+      style={{
+        borderRadius: 'var(--radius-xl)',
+        padding: 'var(--space-lg)',
+        backgroundColor: 'var(--color-surface-primary)',
+        boxShadow: 'var(--shadow-card-soft)',
+        border: '1px solid var(--color-border-subtle)',
+      }}
     >
-      {/* 문서 프리뷰 카드 + 스캔 라인 */}
+      {/* 프로그레스 바 */}
       <div
         style={{
-          borderRadius: 'var(--radius-xl)',
-          overflow: 'hidden',
-          backgroundColor: 'var(--color-surface-primary)',
-          boxShadow: 'var(--shadow-card-soft)',
-          border: '1px solid var(--color-border-subtle)',
-          position: 'relative',
+          width: '100%', height: 4, borderRadius: 'var(--radius-full)',
+          backgroundColor: 'var(--color-surface-secondary)', overflow: 'hidden',
+          marginBottom: 'var(--space-md)',
         }}
       >
-        {/* 파일 프리뷰 영역 */}
-        <div
+        <motion.div
           style={{
-            position: 'relative',
-            minHeight: 200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'var(--color-surface-secondary)',
+            height: '100%', borderRadius: 'var(--radius-full)',
+            background: 'linear-gradient(90deg, var(--color-action-primary), #818CF8)',
           }}
-        >
-          {filePreviewUrl ? (
-            <img
-              src={filePreviewUrl}
-              alt={file?.name ?? ''}
-              style={{
-                width: '100%',
-                maxHeight: 240,
-                objectFit: 'contain',
-              }}
-            />
-          ) : (
-            <FileText size={48} color="var(--color-icon-secondary)" />
-          )}
-
-          {/* 스캔 라인 오버레이 (analyzing 상태에서만) */}
-          {state === 'analyzing' && <ScanLineAnimation />}
-        </div>
-
-        {/* 프로그레스 정보 */}
-        <div style={{ padding: 'var(--space-lg)' }}>
-          {/* 프로그레스 바 — 0에서 시작, 천천히 올라감 */}
-          <div
-            style={{
-              width: '100%',
-              height: 4,
-              borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--color-surface-secondary)',
-              overflow: 'hidden',
-              marginBottom: 'var(--space-md)',
-            }}
-          >
-            <motion.div
-              style={{
-                height: '100%',
-                borderRadius: 'var(--radius-full)',
-                background: 'linear-gradient(90deg, var(--color-action-primary), #818CF8)',
-              }}
-              initial={{ width: '0%' }}
-              animate={{ width: `${progress}%` }}
-              transition={{
-                duration: 1.2,
-                ease: [0.25, 1, 0.5, 1],
-              }}
-            />
-          </div>
-
-          {/* 상태 라벨 + % */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <p
-              className="text-[14px] font-medium"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              {statusLabel}
-            </p>
-            <motion.span
-              className="text-[13px] font-semibold"
-              style={{ color: 'var(--color-action-primary)' }}
-            >
-              {progressDisplay}
-            </motion.span>
-          </div>
-        </div>
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
+        />
       </div>
 
-      {/* 캐릭터 분석 표시 (analyzing 상태) */}
-      {state === 'analyzing' && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring' as const, ...springs.expand, delay: 0.2 }}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-md)',
-            padding: 'var(--space-md) var(--space-lg)',
-            borderRadius: 'var(--radius-xl)',
-            backgroundColor: 'var(--color-action-primary-subtle)',
-            border: '1px solid var(--color-border-subtle)',
-          }}
-        >
-          {/* Phivis 캐릭터 — float 애니메이션 */}
-          {/* 
-            캐릭터 이미지가 /public/images/phivis-mascot.png 에 있으면:
-            <motion.img src="/images/phivis-mascot.png" ... />
-            
-            없으면 아래 아이콘 폴백 사용:
-          */}
-          <motion.div
-            animate={{
-              y: [0, -4, 0],
-              rotate: [0, 2, -2, 0],
-            }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 'var(--radius-lg)',
-              background: 'linear-gradient(135deg, var(--color-action-primary), #818CF8)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(99, 91, 255, 0.3)',
-            }}
-          >
-            {/* 캐릭터 얼굴 — 간단한 SVG (Phivis 마스코트 대체) */}
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              {/* 눈 */}
-              <circle cx="10" cy="12" r="2.5" fill="white" />
-              <circle cx="18" cy="12" r="2.5" fill="white" />
-              {/* 미소 */}
-              <path
-                d="M9 18 Q14 22 19 18"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
-              />
-            </svg>
-          </motion.div>
-
-          {/* 분석 중 텍스트 (점 애니메이션) */}
-          <div style={{ flex: 1 }}>
-            <p
-              className="text-[14px] font-semibold"
-              style={{ color: 'var(--color-action-primary)' }}
-            >
-              {t('progress.analyzing_character', { defaultValue: '문서를 분석하고 있어요' })}
-            </p>
-            <p
-              className="text-[12px]"
-              style={{ color: 'var(--color-text-secondary)', marginTop: 2 }}
-            >
-              {t('progress.analyzing_detail', { defaultValue: '항목별로 해석하고 비교하는 중...' })}
-            </p>
-          </div>
-        </motion.div>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p className="text-[14px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          {statusLabel}
+        </p>
+        <span className="text-[13px] font-semibold" style={{ color: 'var(--color-action-primary)' }}>
+          {progress}%
+        </span>
+      </div>
     </motion.div>
   );
 }
 
 // ═══════════════════════════════════════════
-// result: 결과 카드 (sheet 전환)
+// Result cards (프리뷰는 위에서 축소됨, 결과만 표시)
 // ═══════════════════════════════════════════
-function ScanResult() {
+function ScanResultCards() {
   const { t } = useTranslation('scan');
   const navigate = useNavigate();
   const { result, reset } = useScanStore();
@@ -694,11 +471,7 @@ function ScanResult() {
 
   const catConfig = CATEGORY_CONFIG[result.category] ?? CATEGORY_CONFIG.general;
   const CatIcon = catConfig.icon;
-
-  // linked_widget 라우트
-  const linkedRoute = result.linked_widget
-    ? WIDGET_ROUTES[result.linked_widget]
-    : null;
+  const linkedRoute = result.linked_widget ? WIDGET_ROUTES[result.linked_widget] : null;
 
   return (
     <motion.div
@@ -714,56 +487,36 @@ function ScanResult() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring' as const, ...springs.pop, delay: 0.1 }}
         style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          alignSelf: 'flex-start',
-          gap: 'var(--space-xs)',
-          padding: '6px 14px',
-          borderRadius: 'var(--radius-full)',
-          backgroundColor: catConfig.bg,
-          color: catConfig.text,
-          fontSize: 13,
-          fontWeight: 600,
+          display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start',
+          gap: 'var(--space-xs)', padding: '6px 14px', borderRadius: 'var(--radius-full)',
+          backgroundColor: catConfig.bg, color: catConfig.text, fontSize: 13, fontWeight: 600,
         }}
       >
         <CatIcon size={14} />
         {t(catConfig.label)}
       </motion.div>
 
-      {/* 요약 카드 (히어로) */}
+      {/* 요약 카드 */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring' as const, ...springs.expand, delay: 0.15 }}
         style={{
-          borderRadius: 'var(--radius-xl)',
-          padding: 'var(--space-xl) var(--space-lg)',
-          backgroundColor: 'var(--color-surface-primary)',
-          boxShadow: 'var(--shadow-card-soft)',
+          borderRadius: 'var(--radius-xl)', padding: 'var(--space-xl) var(--space-lg)',
+          backgroundColor: 'var(--color-surface-primary)', boxShadow: 'var(--shadow-card-soft)',
           border: '1px solid var(--color-border-subtle)',
         }}
       >
         <h2
           className="text-[20px] font-bold"
-          style={{
-            color: 'var(--color-text-primary)',
-            letterSpacing: '-0.02em',
-            marginBottom: 'var(--space-xs)',
-          }}
+          style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.02em', marginBottom: 'var(--space-xs)' }}
         >
           {result.summary.title}
         </h2>
-        <p
-          className="text-[14px]"
-          style={{
-            color: 'var(--color-text-secondary)',
-            marginBottom: 'var(--space-lg)',
-          }}
-        >
+        <p className="text-[14px]" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>
           {result.summary.subtitle}
         </p>
 
-        {/* Key numbers — 핵심 숫자 크게 (DNA 4) */}
         {result.summary.key_numbers && result.summary.key_numbers.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)' }}>
             {result.summary.key_numbers.map((kn, i) => (
@@ -775,24 +528,16 @@ function ScanResult() {
               >
                 <p
                   className="text-[12px] font-medium"
-                  style={{
-                    color: 'var(--color-text-tertiary)',
-                    marginBottom: 2,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                  }}
+                  style={{ color: 'var(--color-text-tertiary)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}
                 >
                   {kn.label}
                 </p>
-                <p
-                  style={{
-                    fontSize: kn.emphasis ? 32 : 20,
-                    fontWeight: kn.emphasis ? 800 : 600,
-                    color: 'var(--color-text-primary)',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1.1,
-                  }}
-                >
+                <p style={{
+                  fontSize: kn.emphasis ? 32 : 20,
+                  fontWeight: kn.emphasis ? 800 : 600,
+                  color: 'var(--color-text-primary)',
+                  letterSpacing: '-0.03em', lineHeight: 1.1,
+                }}>
                   {kn.value}
                 </p>
               </motion.div>
@@ -801,69 +546,48 @@ function ScanResult() {
         )}
       </motion.div>
 
-      {/* 항목별 카드 (staggered) */}
+      {/* 항목 카드 */}
       {result.items.map((item, i) => (
         <ScanItemCard key={i} item={item} index={i} />
       ))}
 
-      {/* 마감일 카드 */}
+      {/* 마감일 */}
       {result.deadlines && result.deadlines.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 + result.items.length * 0.05 }}
           style={{
-            borderRadius: 'var(--radius-xl)',
-            padding: 'var(--space-lg)',
-            backgroundColor: 'var(--color-surface-primary)',
-            boxShadow: 'var(--shadow-card-soft)',
+            borderRadius: 'var(--radius-xl)', padding: 'var(--space-lg)',
+            backgroundColor: 'var(--color-surface-primary)', boxShadow: 'var(--shadow-card-soft)',
             border: '1px solid var(--color-border-subtle)',
           }}
         >
-          <h3
-            className="text-[16px] font-bold"
-            style={{
-              color: 'var(--color-text-primary)',
-              marginBottom: 'var(--space-md)',
-            }}
-          >
+          <h3 className="text-[16px] font-bold" style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-md)' }}>
             {t('result.deadlines')}
           </h3>
           {result.deadlines.map((dl, i) => (
             <div
               key={i}
               style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 'var(--space-sm)',
+                display: 'flex', alignItems: 'flex-start', gap: 'var(--space-sm)',
                 padding: 'var(--space-sm) 0',
                 borderTop: i > 0 ? '1px solid var(--color-border-default)' : 'none',
               }}
             >
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 'var(--radius-full)',
-                  marginTop: 6,
-                  flexShrink: 0,
-                  backgroundColor:
-                    dl.urgency === 'urgent' ? 'var(--color-action-error)' :
-                    dl.urgency === 'warning' ? 'var(--color-action-warning)' :
-                    'var(--color-action-primary)',
-                }}
-              />
+              <div style={{
+                width: 8, height: 8, borderRadius: 'var(--radius-full)',
+                marginTop: 6, flexShrink: 0,
+                backgroundColor:
+                  dl.urgency === 'urgent' ? 'var(--color-action-error)' :
+                  dl.urgency === 'warning' ? 'var(--color-action-warning)' :
+                  'var(--color-action-primary)',
+              }} />
               <div>
-                <p
-                  className="text-[14px] font-medium"
-                  style={{ color: 'var(--color-text-primary)' }}
-                >
+                <p className="text-[14px] font-medium" style={{ color: 'var(--color-text-primary)' }}>
                   {dl.title} · {dl.date}
                 </p>
-                <p
-                  className="text-[13px]"
-                  style={{ color: 'var(--color-text-secondary)', marginTop: 2 }}
-                >
+                <p className="text-[13px]" style={{ color: 'var(--color-text-secondary)', marginTop: 2 }}>
                   {dl.consequence}
                 </p>
               </div>
@@ -873,14 +597,7 @@ function ScanResult() {
       )}
 
       {/* 면책 */}
-      <p
-        className="text-[12px] text-center"
-        style={{
-          color: 'var(--color-text-tertiary)',
-          padding: '0 var(--space-md)',
-          lineHeight: 1.5,
-        }}
-      >
+      <p className="text-[12px] text-center" style={{ color: 'var(--color-text-tertiary)', padding: '0 var(--space-md)', lineHeight: 1.5 }}>
         {result.disclaimer}
       </p>
 
@@ -891,45 +608,28 @@ function ScanResult() {
           transition={{ type: 'spring' as const, ...springs.pop }}
           onClick={reset}
           style={{
-            flex: 1,
-            padding: '14px 0',
-            borderRadius: 'var(--radius-lg)',
-            fontSize: 15,
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--space-xs)',
-            backgroundColor: 'var(--color-surface-secondary)',
-            color: 'var(--color-text-primary)',
-            border: 'none',
-            cursor: 'pointer',
+            flex: 1, padding: '14px 0', borderRadius: 'var(--radius-lg)',
+            fontSize: 15, fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-xs)',
+            backgroundColor: 'var(--color-surface-secondary)', color: 'var(--color-text-primary)',
+            border: 'none', cursor: 'pointer',
           }}
         >
           <RotateCcw size={18} />
           {t('result.scanAgain')}
         </motion.button>
 
-        {/* linked_widget CTA (#48) */}
         {linkedRoute && (
           <motion.button
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring' as const, ...springs.pop }}
             onClick={() => navigate(linkedRoute)}
             style={{
-              flex: 1,
-              padding: '14px 0',
-              borderRadius: 'var(--radius-lg)',
-              fontSize: 15,
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--space-xs)',
-              backgroundColor: 'var(--color-action-primary)',
-              color: 'var(--color-text-on-color)',
-              border: 'none',
-              cursor: 'pointer',
+              flex: 1, padding: '14px 0', borderRadius: 'var(--radius-lg)',
+              fontSize: 15, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-xs)',
+              backgroundColor: 'var(--color-action-primary)', color: 'var(--color-text-on-color)',
+              border: 'none', cursor: 'pointer',
             }}
           >
             {t('result.viewDetails')}
@@ -947,12 +647,7 @@ function ScanResult() {
 function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
-  const { t } = useTranslation('scan');
-
-  // item 레벨 linked_widget 라우트
-  const itemRoute = item.linked_widget
-    ? WIDGET_ROUTES[item.linked_widget]
-    : null;
+  const itemRoute = item.linked_widget ? WIDGET_ROUTES[item.linked_widget] : null;
 
   return (
     <motion.div
@@ -960,10 +655,8 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 + index * 0.05, type: 'spring' as const, ...springs.expand }}
       style={{
-        borderRadius: 'var(--radius-xl)',
-        overflow: 'hidden',
-        backgroundColor: 'var(--color-surface-primary)',
-        boxShadow: 'var(--shadow-card-soft)',
+        borderRadius: 'var(--radius-xl)', overflow: 'hidden',
+        backgroundColor: 'var(--color-surface-primary)', boxShadow: 'var(--shadow-card-soft)',
         border: '1px solid var(--color-border-subtle)',
       }}
     >
@@ -971,49 +664,22 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
         whileTap={{ scale: 0.99 }}
         onClick={() => setExpanded(!expanded)}
         style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: 'var(--space-lg)',
-          textAlign: 'left',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: 'var(--space-lg)', textAlign: 'left',
+          background: 'none', border: 'none', cursor: 'pointer',
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p
-            className="text-[15px] font-medium"
-            style={{
-              color: 'var(--color-text-primary)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <p className="text-[15px] font-medium" style={{ color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.name_ko}
             {item.name_translated && (
-              <span
-                className="text-[13px] font-normal"
-                style={{
-                  color: 'var(--color-text-tertiary)',
-                  marginLeft: 'var(--space-xs)',
-                }}
-              >
+              <span className="text-[13px] font-normal" style={{ color: 'var(--color-text-tertiary)', marginLeft: 'var(--space-xs)' }}>
                 · {item.name_translated}
               </span>
             )}
           </p>
           {item.amount !== null && item.amount !== undefined && (
-            <p
-              className="text-[22px] font-bold"
-              style={{
-                color: 'var(--color-text-primary)',
-                letterSpacing: '-0.03em',
-                marginTop: 2,
-              }}
-            >
+            <p className="text-[22px] font-bold" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.03em', marginTop: 2 }}>
               <AnimatedNumber value={item.amount} prefix="₩" />
             </p>
           )}
@@ -1035,66 +701,38 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
             transition={{ type: 'spring' as const, ...springs.expand }}
             style={{ overflow: 'hidden' }}
           >
-            <div
-              style={{
-                padding: '0 var(--space-lg) var(--space-lg)',
-                borderTop: '1px solid var(--color-border-default)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-sm)',
-              }}
-            >
+            <div style={{
+              padding: '0 var(--space-lg) var(--space-lg)',
+              borderTop: '1px solid var(--color-border-default)',
+              display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)',
+            }}>
               {item.explanation && (
-                <p
-                  className="text-[14px]"
-                  style={{
-                    color: 'var(--color-text-secondary)',
-                    paddingTop: 'var(--space-md)',
-                    lineHeight: 1.6,
-                  }}
-                >
+                <p className="text-[14px]" style={{ color: 'var(--color-text-secondary)', paddingTop: 'var(--space-md)', lineHeight: 1.6 }}>
                   {item.explanation}
                 </p>
               )}
 
-              {/* Comparison bar */}
               {item.comparison && item.comparison.user_value && item.comparison.reference_value && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: 'var(--space-sm) var(--space-md)',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: 'var(--color-surface-secondary)',
-                    fontSize: 13,
-                  }}
-                >
-                  <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
-                    {item.comparison.user_value}
-                  </span>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--color-surface-secondary)', fontSize: 13,
+                }}>
+                  <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{item.comparison.user_value}</span>
                   <span style={{ color: 'var(--color-text-tertiary)' }}>
                     {item.comparison.reference_label ?? 'Reference'}: {item.comparison.reference_value}
                   </span>
                 </div>
               )}
 
-              {/* linked_widget action (#48) */}
               {item.action_text && itemRoute && (
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => navigate(itemRoute)}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-xs)',
-                    color: 'var(--color-action-primary)',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: 0,
+                    display: 'flex', alignItems: 'center', gap: 'var(--space-xs)',
+                    color: 'var(--color-action-primary)', fontSize: 14, fontWeight: 600,
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                   }}
                 >
                   {item.action_text}
@@ -1110,7 +748,7 @@ function ScanItemCard({ item, index }: { item: ScanItem; index: number }) {
 }
 
 // ═══════════════════════════════════════════
-// 빈 결과 (인식 실패)
+// 빈 결과
 // ═══════════════════════════════════════════
 function ScanEmptyResult() {
   const { t } = useTranslation('scan');
@@ -1123,64 +761,37 @@ function ScanEmptyResult() {
       exit={{ opacity: 0, y: -8 }}
       transition={{ type: 'spring' as const, ...springs.sheet }}
       style={{
-        borderRadius: 'var(--radius-xl)',
-        padding: 'var(--space-2xl) var(--space-lg)',
-        textAlign: 'center',
-        backgroundColor: 'var(--color-surface-primary)',
-        boxShadow: 'var(--shadow-card-soft)',
-        border: '1px solid var(--color-border-subtle)',
+        borderRadius: 'var(--radius-xl)', padding: 'var(--space-2xl) var(--space-lg)',
+        textAlign: 'center', backgroundColor: 'var(--color-surface-primary)',
+        boxShadow: 'var(--shadow-card-soft)', border: '1px solid var(--color-border-subtle)',
       }}
     >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'var(--color-surface-secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto var(--space-lg)',
-        }}
-      >
+      <div style={{
+        width: 56, height: 56, borderRadius: 'var(--radius-lg)',
+        backgroundColor: 'var(--color-surface-secondary)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto var(--space-lg)',
+      }}>
         <FileQuestion size={28} color="var(--color-icon-secondary)" />
       </div>
-      <h3
-        className="text-[18px] font-bold"
-        style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}
-      >
+      <h3 className="text-[18px] font-bold" style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}>
         {t('empty.title')}
       </h3>
-      <p
-        className="text-[14px]"
-        style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xs)' }}
-      >
+      <p className="text-[14px]" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xs)' }}>
         {t('empty.description')}
       </p>
-      <p
-        className="text-[13px]"
-        style={{ color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-xl)' }}
-      >
+      <p className="text-[13px]" style={{ color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-xl)' }}>
         {t('empty.noCountCharge')}
       </p>
       <motion.button
         whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring' as const, ...springs.pop }}
         onClick={reset}
         style={{
-          width: '100%',
-          padding: '14px 0',
-          borderRadius: 'var(--radius-lg)',
-          fontSize: 15,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 'var(--space-xs)',
-          backgroundColor: 'var(--color-action-primary)',
-          color: 'var(--color-text-on-color)',
-          border: 'none',
-          cursor: 'pointer',
+          width: '100%', padding: '14px 0', borderRadius: 'var(--radius-lg)',
+          fontSize: 15, fontWeight: 600,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-xs)',
+          backgroundColor: 'var(--color-action-primary)', color: 'var(--color-text-on-color)',
+          border: 'none', cursor: 'pointer',
         }}
       >
         <RotateCcw size={18} />
@@ -1191,7 +802,7 @@ function ScanEmptyResult() {
 }
 
 // ═══════════════════════════════════════════
-// 횟수 초과 (Paywall 유도)
+// 횟수 초과
 // ═══════════════════════════════════════════
 function ScanLimitReached() {
   const { t } = useTranslation('scan');
@@ -1205,74 +816,46 @@ function ScanLimitReached() {
       exit={{ opacity: 0, y: -8 }}
       transition={{ type: 'spring' as const, ...springs.sheet }}
       style={{
-        borderRadius: 'var(--radius-xl)',
-        padding: 'var(--space-2xl) var(--space-lg)',
-        textAlign: 'center',
-        backgroundColor: 'var(--color-surface-primary)',
-        boxShadow: 'var(--shadow-card-soft)',
-        border: '1px solid var(--color-border-subtle)',
+        borderRadius: 'var(--radius-xl)', padding: 'var(--space-2xl) var(--space-lg)',
+        textAlign: 'center', backgroundColor: 'var(--color-surface-primary)',
+        boxShadow: 'var(--shadow-card-soft)', border: '1px solid var(--color-border-subtle)',
       }}
     >
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'var(--color-bg-warning)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto var(--space-lg)',
-        }}
-      >
+      <div style={{
+        width: 56, height: 56, borderRadius: 'var(--radius-lg)',
+        backgroundColor: 'var(--color-bg-warning)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto var(--space-lg)',
+      }}>
         <Lock size={28} color="var(--color-text-warning)" />
       </div>
-      <h3
-        className="text-[18px] font-bold"
-        style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}
-      >
+      <h3 className="text-[18px] font-bold" style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}>
         {t('limit.title')}
       </h3>
-      <p
-        className="text-[14px]"
-        style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)' }}
-      >
+      <p className="text-[14px]" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xl)' }}>
         {t('limit.description')}
       </p>
 
       <motion.button
         whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring' as const, ...springs.pop }}
         onClick={() => navigate('/paywall')}
         style={{
-          width: '100%',
-          padding: '14px 0',
-          borderRadius: 'var(--radius-lg)',
-          fontSize: 15,
-          fontWeight: 600,
-          backgroundColor: 'var(--color-action-primary)',
-          color: 'var(--color-text-on-color)',
-          border: 'none',
-          cursor: 'pointer',
-          marginBottom: 'var(--space-sm)',
+          width: '100%', padding: '14px 0', borderRadius: 'var(--radius-lg)',
+          fontSize: 15, fontWeight: 600,
+          backgroundColor: 'var(--color-action-primary)', color: 'var(--color-text-on-color)',
+          border: 'none', cursor: 'pointer', marginBottom: 'var(--space-sm)',
         }}
       >
         {t('limit.upgrade')}
       </motion.button>
       <motion.button
         whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring' as const, ...springs.pop }}
         onClick={reset}
         style={{
-          width: '100%',
-          padding: '14px 0',
-          borderRadius: 'var(--radius-lg)',
-          fontSize: 15,
-          fontWeight: 600,
-          backgroundColor: 'var(--color-surface-secondary)',
-          color: 'var(--color-text-primary)',
-          border: 'none',
-          cursor: 'pointer',
+          width: '100%', padding: '14px 0', borderRadius: 'var(--radius-lg)',
+          fontSize: 15, fontWeight: 600,
+          backgroundColor: 'var(--color-surface-secondary)', color: 'var(--color-text-primary)',
+          border: 'none', cursor: 'pointer',
         }}
       >
         {t('limit.goBack')}
@@ -1295,74 +878,46 @@ function ScanError() {
       exit={{ opacity: 0, y: -8 }}
       transition={{ type: 'spring' as const, ...springs.expand }}
       style={{
-        borderRadius: 'var(--radius-xl)',
-        padding: 'var(--space-xl) var(--space-lg)',
-        textAlign: 'center',
-        backgroundColor: 'var(--color-surface-primary)',
-        boxShadow: 'var(--shadow-card-soft)',
-        border: '1px solid var(--color-border-subtle)',
+        borderRadius: 'var(--radius-xl)', padding: 'var(--space-xl) var(--space-lg)',
+        textAlign: 'center', backgroundColor: 'var(--color-surface-primary)',
+        boxShadow: 'var(--shadow-card-soft)', border: '1px solid var(--color-border-subtle)',
       }}
     >
-      {/* 부드러운 에러 아이콘 (금융/비자 맥락 — 불안 줄이기) */}
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'var(--color-bg-error)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto var(--space-lg)',
-        }}
-      >
+      <div style={{
+        width: 56, height: 56, borderRadius: 'var(--radius-lg)',
+        backgroundColor: 'var(--color-bg-error)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto var(--space-lg)',
+      }}>
         <AlertCircle size={28} color="var(--color-text-error)" />
       </div>
-      <p
-        className="text-[15px] font-medium"
-        style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}
-      >
+      <p className="text-[15px] font-medium" style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--space-xs)' }}>
         {error?.startsWith('scan:') ? t(error.replace('scan:', '')) : error}
       </p>
-      <p
-        className="text-[13px]"
-        style={{ color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-xl)' }}
-      >
+      <p className="text-[13px]" style={{ color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-xl)' }}>
         {t('error.noCountCharge')}
       </p>
       <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          transition={{ type: 'spring' as const, ...springs.pop }}
           onClick={reset}
           style={{
-            flex: 1,
-            padding: '14px 0',
-            borderRadius: 'var(--radius-lg)',
-            fontSize: 15,
-            fontWeight: 600,
-            backgroundColor: 'var(--color-surface-secondary)',
-            color: 'var(--color-text-primary)',
-            border: 'none',
-            cursor: 'pointer',
+            flex: 1, padding: '14px 0', borderRadius: 'var(--radius-lg)',
+            fontSize: 15, fontWeight: 600,
+            backgroundColor: 'var(--color-surface-secondary)', color: 'var(--color-text-primary)',
+            border: 'none', cursor: 'pointer',
           }}
         >
           {t('error.goBack')}
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          transition={{ type: 'spring' as const, ...springs.pop }}
           onClick={retry}
           style={{
-            flex: 1,
-            padding: '14px 0',
-            borderRadius: 'var(--radius-lg)',
-            fontSize: 15,
-            fontWeight: 600,
-            backgroundColor: 'var(--color-action-primary)',
-            color: 'var(--color-text-on-color)',
-            border: 'none',
-            cursor: 'pointer',
+            flex: 1, padding: '14px 0', borderRadius: 'var(--radius-lg)',
+            fontSize: 15, fontWeight: 600,
+            backgroundColor: 'var(--color-action-primary)', color: 'var(--color-text-on-color)',
+            border: 'none', cursor: 'pointer',
           }}
         >
           {t('error.retry')}
